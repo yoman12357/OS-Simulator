@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>OS Simulator | System Calls</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+    <div class="page-shell">
+        <section class="top-ribbon">
+            <div class="ribbon-item">
+                <span class="ribbon-label">LAB MODE</span>
+                <strong>Interactive Kernel Studio</strong>
+            </div>
+            <div class="ribbon-item">
+                <span class="ribbon-label">FOCUS</span>
+                <strong>System Call Observation</strong>
+            </div>
+            <div class="ribbon-item">
+                <span class="ribbon-label">ACCESS</span>
+                <strong>Type, Filter, Inspect</strong>
+            </div>
+        </section>
+
+        <header class="hero-panel hero-panel-split">
+            <div class="hero-copy">
+                <a class="back-link" href="../index.html">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Back to OS Simulator
+                </a>
+                <p class="eyebrow">Teacher Demo Build</p>
+                <h1>SYSTEM CALL STUDIO</h1>
+                <p class="hero-description">
+                    Explore process, file, memory, IPC, and device calls in a cleaner studio-style workspace built to make each simulation easier to explain, test, and present.
+                </p>
+
+                <div class="hero-tags">
+                    <span class="hero-tag">Process Control</span>
+                    <span class="hero-tag">Memory Mapping</span>
+                    <span class="hero-tag">IPC Tools</span>
+                    <span class="hero-tag">Device Calls</span>
+                </div>
+            </div>
+
+            <div class="hero-side">
+                <div class="hero-stats">
+                    <div class="hero-stat hero-stat-live">
+                        <span class="hero-stat-label">Status</span>
+                        <div class="hero-stat-value">
+                            <span class="status-dot"></span>
+                            <span id="status-text">RUNNING</span>
+                        </div>
+                        <span class="hero-stat-meta">Kernel ready for commands</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Kernel</span>
+                        <div class="hero-stat-value">v4.0</div>
+                        <span class="hero-stat-meta">Stable build</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Processes</span>
+                        <div class="hero-stat-value" id="proc-count">2</div>
+                        <span class="hero-stat-meta">Tracked live</span>
+                    </div>
+                </div>
+
+                <div class="hero-brief">
+                    <div class="section-kicker">Presentation Note</div>
+                    <p>This version highlights the console first, keeps command groups easier to browse, and separates memory/process inspection for clearer explanation during demos.</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="workspace-grid">
+            <aside class="control-column">
+                <section class="glass-panel accent-panel">
+                    <div class="section-kicker">Kernel Snapshot</div>
+                    <div class="info-stack">
+                        <div class="info-row">
+                            <span class="info-label">PID</span>
+                            <span class="info-value">2840</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">USER</span>
+                            <span class="info-value">root</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">STATE</span>
+                            <span class="info-value">RUNNING</span>
+                        </div>
+                    </div>
+                    <div class="tip-card tip-card-emphasis">
+                        <span class="tip-title">Fast Demo Commands</span>
+                        <p>Try <code>fork worker</code>, <code>malloc 32</code>, <code>pipe</code>, or <code>open notes.txt O_RDWR</code>.</p>
+                    </div>
+                </section>
+
+                <section class="glass-panel">
+                    <div class="section-kicker">Call Categories</div>
+                    <div class="nav-list">
+                        <button class="nav-item" data-category="all" onclick="filterCategory('all')" type="button">
+                            <span class="nav-index">01</span>
+                            <span>All Calls</span>
+                        </button>
+                        <button class="nav-item" data-category="process" onclick="filterCategory('process')" type="button">
+                            <span class="nav-index">02</span>
+                            <span>Process Control</span>
+                        </button>
+                        <button class="nav-item" data-category="file" onclick="filterCategory('file')" type="button">
+                            <span class="nav-index">03</span>
+                            <span>File Access</span>
+                        </button>
+                        <button class="nav-item" data-category="memory" onclick="filterCategory('memory')" type="button">
+                            <span class="nav-index">04</span>
+                            <span>Memory Space</span>
+                        </button>
+                        <button class="nav-item" data-category="ipc" onclick="filterCategory('ipc')" type="button">
+                            <span class="nav-index">05</span>
+                            <span>IPC Signals</span>
+                        </button>
+                        <button class="nav-item" data-category="device" onclick="filterCategory('device')" type="button">
+                            <span class="nav-index">06</span>
+                            <span>Device Layer</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="glass-panel">
+                    <div class="section-kicker">Session Tools</div>
+                    <div class="action-list">
+                        <button class="action-button" onclick="clearHistory()" type="button">Clear History</button>
+                        <button class="action-button" onclick="resetKernel()" type="button">Reset Kernel</button>
+                        <button class="action-button" onclick="showHelp()" type="button">Help</button>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="console-column">
+                <section class="overview-panel">
+                    <div class="overview-card">
+                        <span class="overview-label">Memory Used</span>
+                        <strong id="mem-used">35MB</strong>
+                        <span class="overview-meta">Allocated by active workloads</span>
+                    </div>
+                    <div class="overview-card">
+                        <span class="overview-label">Memory Free</span>
+                        <strong id="mem-free">93MB</strong>
+                        <span class="overview-meta">Available for new mappings</span>
+                    </div>
+                    <div class="overview-card">
+                        <span class="overview-label">Lab Mode</span>
+                        <strong>Interactive</strong>
+                        <span class="overview-meta">Designed for step-by-step explanation</span>
+                    </div>
+                </section>
+
+                <section class="glass-panel console-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Execution Console</div>
+                            <h2>Live Kernel Trace</h2>
+                        </div>
+                        <span class="panel-badge">stdin open</span>
+                    </div>
+
+                    <div class="console-toolbar">
+                        <span class="console-toolbar-chip">Manual input</span>
+                        <span class="console-toolbar-chip">Preset commands</span>
+                        <span class="console-toolbar-chip">Realtime updates</span>
+                    </div>
+
+                    <div class="console-output" id="console-output">
+                        <div class="console-line line-info">$ SYS_CALL_KERNEL initialized</div>
+                        <div class="console-line line-info">$ Ready for system calls...</div>
+                    </div>
+
+                    <label class="console-input-row" for="syscall-input">
+                        <span class="console-prompt">$</span>
+                        <input autocomplete="off" autofocus id="syscall-input" placeholder="fork | exec | wait | malloc | pipe ..." type="text"/>
+                    </label>
+                </section>
+            </section>
+
+            <aside class="insight-column">
+                <section class="glass-panel panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Memory Inspector</div>
+                            <h2>Allocation Atlas</h2>
+                        </div>
+                        <span class="panel-badge">128 MB</span>
+                    </div>
+
+                    <div class="panel-content">
+                        <div class="memory-grid" id="memory-grid"></div>
+
+                        <div class="mem-legend">
+                            <div class="mem-legend-item">
+                                <div class="legend-box mem-free"></div>
+                                <span>Free</span>
+                            </div>
+                            <div class="mem-legend-item">
+                                <div class="legend-box mem-used"></div>
+                                <span>Used</span>
+                            </div>
+                            <div class="mem-legend-item">
+                                <div class="legend-box mem-allocated"></div>
+                                <span>Alloc</span>
+                            </div>
+                        </div>
+
+                        <div class="process-section">
+                            <div class="process-section-title">Active Process Table</div>
+                            <div class="process-list" id="process-list"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass-panel panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Quick Access</div>
+                            <h2>System Call Dock</h2>
+                        </div>
+                        <span class="panel-badge">Preset calls</span>
+                    </div>
+
+                    <div class="panel-content panel-content-tight">
+                        <div class="buttons-grid" id="buttons-grid"></div>
+
+                        <div class="syscall-doc" id="syscall-doc">
+                            <div class="syscall-doc-title">SYSCALL DOC</div>
+                            <div class="syscall-doc-name" id="doc-name">fork()</div>
+                            <div class="syscall-doc-syntax" id="doc-syntax">fork()</div>
+                            <div class="syscall-doc-text" id="doc-desc">Create a child process by duplicating the current one.</div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+
+        <footer class="footer-bar">
+            <div class="footer-left">
+                <span>Build v4.0 simulator</span>
+                <span>2026 OS Emulator</span>
+            </div>
+            <div class="footer-right">
+                <a onclick="showReference()">Reference</a>
+                <span id="exec-count">Executed: 0</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

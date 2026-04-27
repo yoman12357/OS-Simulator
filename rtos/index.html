@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>RTOS Simulator | OS Simulator</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+	<div class="page-shell">
+		<section class="signal-strip">
+			<div class="signal-card">
+				<span class="signal-label">Scheduler</span>
+				<strong>Dual Core Preemptive Priority</strong>
+			</div>
+			<div class="signal-card">
+				<span class="signal-label">Focus</span>
+				<strong>Realtime Task Coordination</strong>
+			</div>
+			<div class="signal-card">
+				<span class="signal-label">Memory</span>
+				<strong>4 MB Shared Pool</strong>
+			</div>
+		</section>
+
+		<header class="hero-shell panel">
+			<div class="hero-main">
+				<a class="hero-back" href="../index.html">
+					<span class="material-symbols-outlined">arrow_back</span>
+					Back to OS Simulator
+				</a>
+				<p class="hero-kicker">Realtime Scheduling Studio</p>
+				<h1>RTOS CONTROL DECK</h1>
+				<p class="hero-text">Manage fixed-priority tasks across two cores, observe execution windows, and track memory usage through a cleaner presentation-oriented dashboard.</p>
+				<div class="hero-tags">
+					<span class="hero-tag">2 Cores</span>
+					<span class="hero-tag">Priority Based</span>
+					<span class="hero-tag">Memory Aware</span>
+				</div>
+			</div>
+			<div class="hero-actions">
+				<div class="brand-wrap">
+					<span class="pulse-dot" aria-hidden="true"></span>
+					<div>
+						<p class="brand-title">RTOS_SIMULATOR</p>
+						<p class="brand-subtitle">OS Simulator Module</p>
+					</div>
+				</div>
+				<div class="topbar-actions">
+					<button id="start-btn" class="btn btn-primary" type="button">
+						<span class="material-symbols-outlined">play_arrow</span>
+						Start
+					</button>
+					<button id="pause-btn" class="btn btn-ghost" type="button" disabled>
+						<span class="material-symbols-outlined">pause</span>
+						Pause
+					</button>
+					<button id="reset-btn" class="btn btn-danger" type="button">
+						<span class="material-symbols-outlined">refresh</span>
+						Reset
+					</button>
+				</div>
+			</div>
+		</header>
+
+		<main class="layout">
+			<section class="sidebar panel">
+				<div class="section-head">
+					<h1>Task Control</h1>
+					<p>Priority-based dual-core scheduling with memory tracking.</p>
+					<p class="algo-note">Policy: Preemptive Priority Scheduling (2 cores, fixed-priority).</p>
+				</div>
+
+				<form id="task-form" class="task-form">
+					<label class="field field-name">
+						<span>Task Name</span>
+						<input type="text" id="task-name" placeholder="Enter task name" required />
+					</label>
+
+					<label class="field field-priority">
+						<span>Priority</span>
+						<select id="task-priority" required>
+							<option value="high">High</option>
+							<option value="medium" selected>Medium</option>
+							<option value="low">Low</option>
+						</select>
+					</label>
+
+					<label class="field field-burst">
+						<span>Execution Time (ms)</span>
+						<input type="number" id="task-burst" min="100" max="5000" value="1000" required />
+					</label>
+
+					<label class="field field-memory">
+						<span>Memory Required (KB)</span>
+						<input type="number" id="task-memory" min="10" max="1000" value="100" required />
+					</label>
+
+					<button type="submit" class="btn btn-primary">
+						<span class="material-symbols-outlined">add</span>
+						Add Task
+					</button>
+				</form>
+
+				<div class="stats-grid">
+					<article class="stat-card">
+						<p>CPU Utilization</p>
+						<strong id="cpu-util">0%</strong>
+					</article>
+					<article class="stat-card">
+						<p>Memory Usage</p>
+						<strong id="memory-usage">0/4096 KB</strong>
+					</article>
+					<article class="stat-card">
+						<p>Tasks Running</p>
+						<strong id="tasks-running">0</strong>
+					</article>
+					<article class="stat-card">
+						<p>Tasks Waiting</p>
+						<strong id="tasks-waiting">0</strong>
+					</article>
+				</div>
+
+				<div class="queue-head">
+					<h2>Task Queue</h2>
+				</div>
+				<ul id="tasks-list" class="tasks-list"></ul>
+			</section>
+
+			<section class="workspace">
+				<div class="panel clock-panel">
+					<div>
+						<h2>System Time: <span id="system-time">0</span> ms</h2>
+						<p id="sim-state" class="sim-state status-idle">IDLE</p>
+					</div>
+					<div class="clock-brief">
+						<span class="clock-brief-label">Live Status</span>
+						<p>Observe how tasks enter waiting, running, and completed states as priority changes scheduling order.</p>
+					</div>
+				</div>
+
+				<div class="panel cpu-panel">
+					<div class="block-head">
+						<h2>CPU Cores</h2>
+						<p>Active execution lanes</p>
+					</div>
+					<div class="core-stack">
+						<div id="core-1" class="cpu-core"><span class="cpu-label">CORE 1</span></div>
+						<div id="core-2" class="cpu-core"><span class="cpu-label">CORE 2</span></div>
+					</div>
+				</div>
+
+				<div class="panel memory-panel">
+					<div class="block-head">
+						<h2>Memory Utilization</h2>
+						<p>Task allocation view</p>
+					</div>
+					<div id="memory-blocks" class="memory-blocks"></div>
+				</div>
+
+				<div class="panel gantt-panel">
+					<div class="block-head block-head-wide">
+						<div>
+							<h2>Task Scheduling Timeline</h2>
+							<p>Execution history across both cores</p>
+						</div>
+						<div class="timeline-note">Preemptive priority scheduling in action</div>
+					</div>
+					<div class="gantt-time-markers" id="gantt-time-markers"></div>
+					<div id="gantt-container" class="gantt-container"></div>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<script src="script.js"></script>
+</body>
+</html>

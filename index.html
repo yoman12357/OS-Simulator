@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>OS Simulator | Advanced Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="index.css" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "background": "#0a0e1a",
+                "tertiary-fixed-dim": "#0066cc",
+                "surface-bright": "#1e293b",
+                "outline": "#64748b",
+                "secondary-container": "#1e3a5f",
+                "tertiary-fixed": "#0084ff",
+                "on-surface-variant": "#cbd5e1",
+                "secondary": "#94a3b8",
+                "surface-container": "#0f172a",
+                "surface-container-low": "#0c1620",
+                "outline-variant": "#334155",
+                "primary": "#ffffff",
+                "surface-container-highest": "#1e293b",
+                "on-surface": "#f1f5f9",
+                "tertiary": "#e0f2fe",
+                "surface-container-high": "#1e293b",
+                "on-background": "#f1f5f9",
+                "surface-container-lowest": "#050810",
+                "surface-dim": "#0a0e1a",
+                "surface-variant": "#1e293b",
+                "tertiary-container": "#0066cc",
+                "error-container": "#cc0000",
+                "surface": "#0a0e1a",
+              },
+              borderRadius: {
+                DEFAULT: "1rem",
+                lg: "2rem",
+                xl: "3rem",
+                full: "9999px"
+              },
+              fontFamily: {
+                headline: ["Space Grotesk"],
+                body: ["Inter"],
+                label: ["Space Grotesk"]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="font-body text-on-background selection:bg-tertiary-fixed selection:text-white">
+
+<!-- Nav -->
+<nav id="navbar" class="navbar-fixed fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-4 bg-[#0a0e1a]/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 ease-in-out">
+    <div class="font-headline font-bold tracking-tighter text-xl text-white flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span>
+        OS Simulator
+    </div>
+    <div class="hidden md:flex items-center gap-8">
+        <a class="text-zinc-400 hover:text-white transition-colors font-headline uppercase tracking-widest text-[10px]" href="#hero">EXPLORE</a>
+        <a class="text-zinc-400 hover:text-white transition-colors font-headline uppercase tracking-widest text-[10px]" href="#modules">MODULES</a>
+        <a class="text-zinc-400 hover:text-white transition-colors font-headline uppercase tracking-widest text-[10px]" href="#team">TEAM</a>
+    </div>
+</nav>
+
+<main class="pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto space-y-16">
+
+    <!-- Hero -->
+    <section id="hero" class="space-y-8">
+        <!-- Terminal Header -->
+        <div class="bg-surface-container rounded-t-lg border border-white/10 border-b-0">
+            <div class="flex items-center gap-2 px-4 py-3">
+                <div class="flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div class="flex-1 text-center">
+                    <span class="font-mono text-xs text-on-surface-variant">os-simulator@main:~$</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Content -->
+        <div class="bg-surface-container rounded-b-lg border border-white/10 p-6 md:p-8">
+            <div class="font-mono text-sm space-y-2">
+                <div class="text-tertiary-fixed">$ ./kernel-lab --info</div>
+                <div class="text-on-surface">Kernel Laboratory v1.0.4 - Interactive Computing Environment</div>
+                <div class="text-tertiary-fixed">$ ./kernel-lab --check</div>
+                <div class="text-on-surface">Environment State: <span class="text-blue-300">ACTIVE</span></div>
+                <div class="text-on-surface">Running Components: <span class="text-tertiary-fixed" id="module-count">10</span></div>
+                <div class="text-on-surface">Completed Operations: <span class="text-tertiary-fixed" id="sim-count">0</span></div>
+                <div class="text-tertiary-fixed">$ ./kernel-lab --assist</div>
+                <div class="text-on-surface-variant text-xs">
+                    Supported Operations:<br/>
+                    &nbsp;&nbsp;explore&nbsp;&nbsp;&nbsp;&nbsp;Navigate component library<br/>
+                    &nbsp;&nbsp;simulate&nbsp;&nbsp;&nbsp;Execute live demonstrations<br/>
+                    &nbsp;&nbsp;learn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Access training materials<br/>
+                    &nbsp;&nbsp;team&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Display development staff
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-gradient-to-br from-tertiary-fixed/20 to-tertiary-fixed/5 rounded-lg p-4 border border-tertiary-fixed/30 text-center">
+                <div class="text-2xl font-bold text-tertiary-fixed mb-1" id="stat-modules">10</div>
+                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Modules</div>
+            </div>
+            <div class="bg-gradient-to-br from-sky-500/20 to-sky-500/5 rounded-lg p-4 border border-sky-500/30 text-center">
+                <div class="text-2xl font-bold text-sky-300 mb-1" id="stat-processes">0</div>
+                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Processes</div>
+            </div>
+            <div class="bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-lg p-4 border border-blue-500/30 text-center">
+                <div class="text-2xl font-bold text-blue-300 mb-1" id="stat-memory">128</div>
+                <div class="text-xs text-on-surface-variant uppercase tracking-widest">MB RAM</div>
+            </div>
+            <div class="bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 rounded-lg p-4 border border-indigo-500/30 text-center">
+                <div class="text-2xl font-bold text-indigo-300 mb-1" id="stat-uptime">00:00</div>
+                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Uptime</div>
+            </div>
+        </div>
+
+        <!-- Command Palette -->
+        <div class="bg-surface-container-low rounded-lg border border-white/5 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-tertiary-fixed font-mono text-sm">$</span>
+                <input type="text" id="command-input" placeholder="Enter: explore, simulate, learn, team..." 
+                       class="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant/50 font-mono text-sm">
+                <span class="text-xs text-on-surface-variant">Press Tab for suggestions</span>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button class="command-chip px-3 py-1 bg-tertiary-fixed/10 border border-tertiary-fixed/30 rounded-full text-xs text-tertiary-fixed hover:bg-tertiary-fixed/20 transition-colors" data-command="explore">
+                    explore
+                </button>
+                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="simulate">
+                    simulate
+                </button>
+                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="learn">
+                    learn
+                </button>
+                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="team">
+                    team
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Modules -->
+    <section id="modules" class="space-y-8 scroll-mt-24">
+        <div class="flex items-center gap-4">
+            <h2 class="font-headline text-2xl font-bold uppercase tracking-[0.3em] text-white">SYSTEM_MODULES</h2>
+            <div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+        </div>
+
+        <div class="dashboard-shell">
+            <aside class="dashboard-access-panel">
+                <div class="dashboard-panel">
+                    <div class="dashboard-kicker">Launch Center</div>
+                    <h3 class="dashboard-title">Open Any Simulator Faster</h3>
+                    <p class="dashboard-copy">Use quick links for common topics or browse the full module directory on the right. Every card now opens its simulation directly.</p>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="dashboard-kicker">Quick Access</div>
+                    <div class="quick-launch-grid">
+                        <a class="quick-link quick-link-primary" href="system-calls/index.html">
+                            <span class="material-symbols-outlined">terminal</span>
+                            <span>System Calls</span>
+                        </a>
+                        <a class="quick-link" href="memory-management/index.html">
+                            <span class="material-symbols-outlined">database</span>
+                            <span>Memory</span>
+                        </a>
+                        <a class="quick-link" href="process-synchronization/index.html">
+                            <span class="material-symbols-outlined">sync</span>
+                            <span>Sync</span>
+                        </a>
+                        <a class="quick-link" href="deadlock/index.html">
+                            <span class="material-symbols-outlined">lock</span>
+                            <span>Deadlock</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="dashboard-panel">
+                    <div class="dashboard-kicker">Directory Summary</div>
+                    <div class="dashboard-metric-list">
+                        <div class="dashboard-metric">
+                            <span class="dashboard-metric-label">Total Simulators</span>
+                            <strong>10</strong>
+                        </div>
+                        <div class="dashboard-metric">
+                            <span class="dashboard-metric-label">Learning Areas</span>
+                            <strong>Process, Memory, Storage</strong>
+                        </div>
+                        <div class="dashboard-metric">
+                            <span class="dashboard-metric-label">Access Method</span>
+                            <strong>One-click launch cards</strong>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="module-directory">
+                <div class="module-directory-header">
+                    <div>
+                        <div class="dashboard-kicker">Simulation Directory</div>
+                        <h3 class="dashboard-title">All Available Labs</h3>
+                    </div>
+                    <p class="module-directory-copy">Each module includes a short description so users can pick the right simulation without guessing.</p>
+                </div>
+
+                <div class="module-grid">
+
+                    <!-- System Calls -->
+                    <a href="system-calls/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">terminal</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Kernel</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">SYSTEM_CALLS</h3>
+                            <p class="text-zinc-500 text-sm font-light">Connect applications with core kernel functions.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Fragmentation -->
+                    <a href="fragmentation/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">broken_image</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Memory</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">FRAGMENTATION</h3>
+                            <p class="text-zinc-500 text-sm font-light">Memory space optimization and fragmentation study.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- CPU Scheduling -->
+                    <a href="cpu-scheduling/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">memory</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">CPU</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">CPU_SCHEDULING</h3>
+                            <p class="text-zinc-500 text-sm font-light">Task scheduling algorithms and response time reduction.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Deadlock -->
+                    <a href="deadlock/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">lock</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Safety</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">DEADLOCK_(RAG)</h3>
+                            <p class="text-zinc-500 text-sm font-light">Resource conflict resolution and deadlock prevention.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Process Synchronization -->
+                    <a href="process-synchronization/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">sync</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Process</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">PROCESS_SYNC</h3>
+                            <p class="text-zinc-500 text-sm font-light">Concurrent process coordination and synchronization.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Disk Scheduling -->
+                    <a href="disk-scheduling/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">album</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Storage</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">DISK_SCHEDULING</h3>
+                            <p class="text-zinc-500 text-sm font-light">Storage access optimization and seek strategies.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- File System -->
+                    <a href="file-system/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">folder_open</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Files</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">FILE_SYSTEM</h3>
+                            <p class="text-zinc-500 text-sm font-light">Data organization and storage allocation methods.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- File Allocation -->
+                    <a href="file-allocation/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">inventory_2</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Allocation</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">FILE_ALLOCATION</h3>
+                            <p class="text-zinc-500 text-sm font-light">Study contiguous, linked, and indexed file placement methods.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Memory Management -->
+                    <a href="memory-management/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">database</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Memory</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">MEMORY_MGMT</h3>
+                            <p class="text-zinc-500 text-sm font-light">Address translation and memory optimization techniques.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- RTOS -->
+                    <a href="rtos/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">timer</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">Realtime</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">RTOS</h3>
+                            <p class="text-zinc-500 text-sm font-light">Time-critical system design and multi-core processing.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                    <!-- Process State Transition -->
+                    <a href="process-state-transition/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                        <div class="module-card-top">
+                            <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-2xl">account_tree</span>
+                            </div>
+                            <div class="module-card-meta">
+                                <span class="module-badge">States</span>
+                                <div class="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-zinc-500 group-hover:bg-tertiary-fixed group-hover:text-white group-hover:border-tertiary-fixed transition-all duration-200">
+                                    <span class="material-symbols-outlined text-sm">north_east</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card-content">
+                            <h3 class="font-headline text-base font-bold uppercase tracking-widest mb-2 text-white transition-colors duration-200">STATE_TRANSITION</h3>
+                            <p class="text-zinc-500 text-sm font-light">Process lifecycle management and interrupt handling.</p>
+                        </div>
+                        <div class="module-card-footer">
+                            <span class="module-link-label">Open simulation</span>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team -->
+    <section id="team" class="space-y-8 scroll-mt-24">
+        <div class="flex items-center gap-4">
+            <h2 class="font-headline text-2xl font-bold uppercase tracking-[0.3em] text-white">CONTRIBUTORS</h2>
+            <div class="h-[1px] flex-grow bg-outline-variant/30"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Aryan Bokolia</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Team Lead</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Aryan Sanjay Palimkar</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Ayush Ashutosh Jena</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Dharshan</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Jyosthna</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Karthikeya</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Chinmayee</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Ramdas</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+            <div class="contributor-card bg-surface-container-lowest border border-white/5 rounded-md px-5 py-4 flex flex-col items-start gap-1 group">
+                <h4 class="font-headline text-sm font-bold text-white group-hover:text-tertiary transition-colors">Phanindra</h4>
+                <p class="font-label text-[11px] text-tertiary-fixed tracking-widest">Developer</p>
+            </div>
+        </div>
+    </section>
+
+<footer class="bg-[#0a0e1a] border-t border-white/5 px-6 md:px-12 py-12">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+        <div class="space-y-4">
+            <div class="text-zinc-400 font-bold font-headline text-xl uppercase tracking-tighter">
+                <span class="text-tertiary-fixed">OS </span>Simulator
+            </div>
+            <div class="text-zinc-600 font-headline text-[10px] uppercase tracking-widest">
+                2026 Advanced Learning Platform [STABLE_BUILD]
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-8 justify-start md:justify-end">
+            <a class="text-zinc-500 hover:text-white transition-colors font-headline text-[10px] uppercase tracking-widest" href="https://github.com/yoman12357/OS-Simulator">GITHUB</a>
+            <a class="text-zinc-500 hover:text-white transition-colors font-headline text-[10px] uppercase tracking-widest" href="#">DOCUMENTATION</a>
+            
+        </div>
+    </div>
+</footer>
+
+<script>
+// Terminal Interface & Interactive Navbar
+document.addEventListener('DOMContentLoaded', () => {
+    // Interactive Navbar Scroll Behavior
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const navbar = document.getElementById('navbar');
+    const navbarHeight = navbar.offsetHeight;
+    
+    function updateNavbar() {
+        const currentScrollY = window.scrollY;
+        
+        if (currentScrollY <= 0) {
+            // At top of page - always show navbar
+            navbar.classList.remove('navbar-hidden');
+            navbar.style.transform = 'translateY(0)';
+        } else if (currentScrollY > lastScrollY && currentScrollY > navbarHeight) {
+            // Scrolling down and past navbar height - hide navbar
+            navbar.classList.add('navbar-hidden');
+            navbar.style.transform = `translateY(-${navbarHeight}px)`;
+        } else if (currentScrollY < lastScrollY) {
+            // Scrolling up - show navbar
+            navbar.classList.remove('navbar-hidden');
+            navbar.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollY = currentScrollY;
+        ticking = false;
+    }
+    
+    function requestTick() {
+        if (!ticking) {
+            window.requestAnimationFrame(updateNavbar);
+            ticking = true;
+        }
+    }
+    
+    window.addEventListener('scroll', requestTick, { passive: true });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const newNavbarHeight = navbar.offsetHeight;
+        if (newNavbarHeight !== navbarHeight) {
+            navbarHeight = newNavbarHeight;
+        }
+    });
+    
+    // Animated Statistics
+    let simCount = 0;
+    let processCount = 0;
+    let uptimeSeconds = 0;
+    
+    // Update simulation count
+    setInterval(() => {
+        simCount += Math.floor(Math.random() * 3) + 1;
+        document.getElementById('sim-count').textContent = simCount;
+    }, 3000);
+    
+    // Update process count
+    setInterval(() => {
+        processCount = Math.floor(Math.random() * 8) + 1;
+        document.getElementById('stat-processes').textContent = processCount;
+    }, 2000);
+    
+    // Update uptime
+    setInterval(() => {
+        uptimeSeconds++;
+        const minutes = Math.floor(uptimeSeconds / 60);
+        const seconds = uptimeSeconds % 60;
+        document.getElementById('stat-uptime').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+    
+    // Command Palette
+    const commandInput = document.getElementById('command-input');
+    const commandChips = document.querySelectorAll('.command-chip');
+    
+    const commands = {
+        'explore': () => {
+            document.getElementById('modules').scrollIntoView({ behavior: 'smooth' });
+            addTerminalOutput('$ explore', 'Navigating to system modules...');
+        },
+        'simulate': () => {
+            addTerminalOutput('$ simulate', 'Launching simulation environment...');
+            setTimeout(() => {
+                window.open('system-calls/index.html', '_blank');
+            }, 1000);
+        },
+        'learn': () => {
+            addTerminalOutput('$ learn', 'Opening educational resources...');
+            setTimeout(() => {
+                window.open('process-synchronization/index.html', '_blank');
+            }, 1000);
+        },
+        'team': () => {
+            document.getElementById('team').scrollIntoView({ behavior: 'smooth' });
+            addTerminalOutput('$ team', 'Loading team information...');
+        }
+    };
+    
+    commandChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            const command = chip.dataset.command;
+            commandInput.value = command;
+            executeCommand(command);
+        });
+    });
+    
+    commandInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            executeCommand(commandInput.value);
+        }
+    });
+    
+    function executeCommand(command) {
+        const trimmedCommand = command.trim().toLowerCase();
+        if (commands[trimmedCommand]) {
+            commands[trimmedCommand]();
+        } else if (trimmedCommand === '') {
+            return;
+        } else {
+            addTerminalOutput(`$ ${trimmedCommand}`, `Command not found: ${trimmedCommand}. Type 'help' for available commands.`);
+        }
+        commandInput.value = '';
+    }
+    
+    function addTerminalOutput(command, output) {
+        // This would add output to the terminal - for now just log it
+        console.log(command, output);
+    }
+    
+    // Typing effect for terminal
+    const terminalLines = document.querySelectorAll('.font-mono .text-tertiary-fixed');
+    terminalLines.forEach((line, index) => {
+        line.style.opacity = '0';
+        setTimeout(() => {
+            line.style.transition = 'opacity 0.5s';
+            line.style.opacity = '1';
+        }, index * 500);
+    });
+});
+</script>
+<script src="index.js"></script>
+</body>
+</html>

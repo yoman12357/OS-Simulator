@@ -1,0 +1,21 @@
+{
+  "name": "os-simulator",
+  "version": "1.0.0",
+  "description": "An OS Simulator project for the OS Lab course, implementing various core operating system concepts.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AppajiDheeraj/OS_Simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AppajiDheeraj/OS_Simulator/issues"
+  },
+  "homepage": "https://github.com/AppajiDheeraj/OS_Simulator#readme"
+}
