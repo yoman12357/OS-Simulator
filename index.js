@@ -1,4 +1,3 @@
-// OS Emulator - Minimal interactions
 
 document.addEventListener('DOMContentLoaded', () => {
     const moduleCards = document.querySelectorAll('.module-card');
@@ -12,8 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statModulesElement) {
         statModulesElement.textContent = moduleCards.length;
     }
-
-    // Dynamic processor load counter
     const loadElement = document.getElementById('processor-load');
     if (loadElement) {
         setInterval(() => {
@@ -21,8 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadElement.innerHTML = `PROCESSOR_LOAD<br>${load}ms`;
         }, 2000);
     }
-
-    // Boot button interaction
     const bootBtn = document.getElementById('btn-boot');
     if (bootBtn) {
         bootBtn.addEventListener('click', () => {
@@ -37,8 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1500);
         });
     }
-
-    // Smooth scroll for nav links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', (e) => {
             e.preventDefault();
@@ -48,8 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
-    // Route module cards to their simulator pages
     const moduleRoutes = {
         SYSTEM_CALLS: 'system-calls/index.html',
         MEMORY_MGMT: 'memory-management/index.html',
@@ -70,8 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const route = moduleRoutes[heading.textContent.trim()];
         if (!route) return;
-
-        // Keep native behavior for anchor cards.
         if (card.tagName.toLowerCase() === 'a') return;
 
         card.addEventListener('click', () => {

@@ -1,10 +1,3 @@
-/*
-Module Name: System Calls Simulator - Compact Edition
-Created by: Appaji Nagaraja Dheeraj
-File Purpose: Compact, efficient system call simulation
-*/
-
-// ============ SYSTEM STATE ============
 const systemState = {
     processes: [
         { pid: 1, name: 'init', state: 'RUNNING', memory: 2.5 },
@@ -84,8 +77,6 @@ function formatCommandExample(name) {
     const call = syscalls[name];
     return call && call.example ? call.example : name + ' ';
 }
-
-// ============ SYSCALLS ============
 const syscalls = {
     fork: {
         cat: 'process',
@@ -408,8 +399,6 @@ const syscalls = {
         run: () => ({ ok: true, msg: 'OS_EMULATOR kernel v4.0' })
     }
 };
-
-// ============ INIT ============
 document.addEventListener('DOMContentLoaded', () => {
     setupInput();
     renderMemory();
@@ -418,8 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSyscallDoc('fork');
     addLog('$ System ready', 'info');
 });
-
-// ============ INPUT ============
 function setupInput() {
     const input = document.getElementById('syscall-input');
 
@@ -479,8 +466,6 @@ function execute(cmd) {
     renderProcesses();
     updateFooter();
 }
-
-// ============ DISPLAY ============
 function addLog(text, type = 'output') {
     const output = document.getElementById('console-output');
     const line = document.createElement('div');
@@ -596,8 +581,6 @@ function setActiveCategory(cat) {
         item.classList.toggle('is-active', item.dataset.category === cat);
     });
 }
-
-// ============ ACTIONS ============
 function filterCategory(cat) {
     setActiveCategory(cat);
     const grid = document.getElementById('buttons-grid');
