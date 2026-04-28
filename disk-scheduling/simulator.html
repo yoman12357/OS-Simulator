@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Scheduling Visualization</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #0a0a0a;
+            color: white;
+            flex-direction: column;
+            font-family: 'Arial', sans-serif;
+            perspective: 1000px;
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(30deg);
+            margin-top: 20px;
+        }
+
+        .disk-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            animation: rotateDisk 5s linear infinite;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #777, #333);
+            box-shadow: 
+                inset 0 0 20px #000, 
+                0 0 15px rgba(255, 255, 255, 0.2),
+                0 5px 15px rgba(0, 0, 0, 0.8);
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+        }
+
+        .disk-center {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 40% 40%, #aaa, #555);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+
+        .disk-center::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #888, #444);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .track {
+            position: absolute;
+            border: 1px solid rgba(180, 180, 180, 0.3);
+            border-radius: 50%;
+            background: transparent;
+            box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.1);
+        }
+
+        /*
+        .track-number {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 10px;
+            text-align: center;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+            */
+
+        .highlight {
+            border-color: rgba(255, 165, 0, 0.7);
+            box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
+        }
+
+        .current-track {
+            border-color: #00ff00 !important;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.7) !important;
+        }
+
+        /* Fixed arm assembly that doesn't rotate with the disk */
+        .arm-assembly {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            top: 0;
+            left: 0;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .arm-base {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 40% 40%, #999, #555);
+            border-radius: 50%;
+            top: 50%;
+            right: -69px;
+            transform: translateY(-50%);
+            box-shadow: 
+                0 0 10px rgba(0, 0, 0, 0.8),
+                inset 0 0 5px rgba(255, 255, 255, 0.3);
+            z-index: 22;
+        }
+
+        .arm-base::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 40% 40%, #777, #444);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .disk-arm {
+            position: absolute;
+            width: 250px; /*changed*/
+            height: 8px;
+            background: linear-gradient(to bottom, #888, #ccc, #888);
+            top: 50%;
+            right: -50px;
+            transform-origin: right center;
+            transform: translateY(-50%);
+            box-shadow: 
+                0 -1px 2px rgba(0, 0, 0, 0.6),
+                0 1px 2px rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            transition: transform 1s ease-in-out;
+            z-index: 21;
+        }
+
+        .arm-head {
+            position: absolute;
+            width: 15px;
+            height: 12px;
+            background: linear-gradient(to bottom, #777, #555);
+            border-radius: 2px;
+            top: 50%;
+            left: 0;
+            transform: translate(-100%, -50%);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .arm-head::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 4px;
+            background: linear-gradient(to bottom, #ff3333, #990000);
+            border-radius: 1px;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
+        }
+
+        .screw {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle at 30% 30%, #aaa, #666);
+            border-radius: 50%;
+            box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .screw::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 1px;
+            background: #444;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .screw:nth-child(1) { top: 20px; left: 20px; }
+        .screw:nth-child(2) { top: 20px; right: 20px; }
+        .screw:nth-child(3) { bottom: 20px; left: 20px; }
+        .screw:nth-child(4) { bottom: 20px; right: 20px; }
+
+        .disk-reflection {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0) 50%, 
+                rgba(255, 255, 255, 0.05) 100%);
+            pointer-events: none;
+        }
+
+        .controls {
+            margin-top: 30px;
+            background: linear-gradient(to bottom, #333, #222);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            width: 1800px;
+            max-width: 1000px;
+        }
+
+        .controls h2 {
+            margin-top: 0;
+            color: #ddd;
+            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        label {
+            margin-right: 10px;
+            color: #bbb;
+            min-width: 150px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 200px;
+            height: 8px;
+            background: linear-gradient(to right, #444, #666);
+            border-radius: 4px;
+            outline: none;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(to bottom, #ccc, #888);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        input[type="number"], input[type="text"] {
+            background: #222;
+            border: 1px solid #444;
+            color: #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 100px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        select {
+            background: #222;
+            border: 1px solid #444;
+            color: #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 200px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        button {
+            background: linear-gradient(to bottom, #555, #333);
+            border: 1px solid #666;
+            color: #ddd;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: linear-gradient(to bottom, #666, #444);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .track-info {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .algorithm-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .sequence-display {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 14px;
+            word-break: break-all;
+        }
+
+        @keyframes rotateDisk {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .led {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            margin-left: 10px;
+            box-shadow: 0 0 5px #00ff00;
+            animation: pulse 1.5s infinite;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h2>Disk Scheduling Visualization <span class="led"></span></h2>
+        
+        <div class="grid-container">
+            <div>
+                <div class="control-group">
+                    <label for="algorithm">Scheduling Algorithm:</label>
+                    <select id="algorithm">
+                        <option value="fcfs">FCFS (First Come First Served)</option>
+                        <option value="sstf">SSTF (Shortest Seek Time First)</option>
+                        <option value="scan">SCAN (Elevator)</option>
+                        <option value="cscan">C-SCAN (Circular SCAN)</option>
+                        <option value="look">LOOK</option>
+                        <option value="clook">C-LOOK (Circular LOOK)</option>
+                        <option value="rss">RSS (Random Scheduling)</option>
+                        <option value="lifo">LIFO (Last In First Out)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="request-sequence">Request Sequence:</label>
+                    <input type="text" id="request-sequence" placeholder="e.g., 98, 183, 37, 122, 14, 124, 65, 67">
+                </div>
+                
+                <div class="control-group">
+                    <label for="initial-head">Initial Head Position:</label>
+                    <input type="number" id="initial-head" min="0" value="50">
+                </div>
+                
+                <div class="control-group">
+                    <label for="last-cylinder">Last Cylinder:</label>
+                    <input type="number" id="last-cylinder" min="1" value="200">
+                </div>
+                
+                <button id="simulate-btn">Simulate</button>
+            </div>
+            
+            <div>
+                <div class="control-group">
+                    <label for="speed">Rotation Speed:</label>
+                    <input type="range" id="speed" min="1" max="10" value="5">
+                </div>
+                
+                <div class="algorithm-info" id="algorithm-info">
+                    <strong>FCFS (First Come First Served):</strong> Requests are served in the order they arrive, regardless of their location.
+                </div>
+                
+                <div class="track-info" id="track-info">Current Track: <span id="current-track-display">-</span></div>
+                
+                <div class="sequence-display">
+                    <div>Original Sequence: <span id="original-sequence-display">-</span></div>
+                    <div>Computed Sequence: <span id="computed-sequence-display">-</span></div>
+                    <div>Total Seek Distance: <span id="seek-distance-display">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="disk-container" id="disk">
+            <div class="disk-reflection"></div>
+            <!--
+            <div class="disk-center"></div>
+            -->
+        </div>
+        
+        <!-- Fixed arm assembly that doesn't rotate with the disk -->
+        <div class="arm-assembly">
+            <div class="disk-arm" id="arm">
+                <div class="arm-head"></div>
+            </div>
+            <div class="arm-base"></div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const diskContainer = document.getElementById("disk");
+        const speedSlider = document.getElementById("speed");
+        const armElement = document.getElementById("arm");
+        const currentTrackDisplay = document.getElementById("current-track-display");
+        const algorithmSelect = document.getElementById("algorithm");
+        const requestSequenceInput = document.getElementById("request-sequence");
+        const initialHeadInput = document.getElementById("initial-head");
+        const lastCylinderInput = document.getElementById("last-cylinder");
+        const simulateBtn = document.getElementById("simulate-btn");
+        const algorithmInfo = document.getElementById("algorithm-info");
+        const originalSequenceDisplay = document.getElementById("original-sequence-display");
+        const computedSequenceDisplay = document.getElementById("computed-sequence-display");
+        const seekDistanceDisplay = document.getElementById("seek-distance-display");
+        
+        // Default values
+        let lastCylinder = 200;
+        let requestSequence = [150, 20, 180, 90, 50];
+        let initialHead = 50;
+        let sequence = [];
+        let isAnimating = false;
+        let tracks = {};
+        
+        // Algorithm descriptions
+        const algorithmDescriptions = {
+            fcfs: "<strong>FCFS (First Come First Served):</strong> Requests are served in the order they arrive, regardless of their location.",
+            sstf: "<strong>SSTF (Shortest Seek Time First):</strong> Serves the request closest to the current head position.",
+            scan: "<strong>SCAN (Elevator):</strong> Head moves in one direction until it reaches the end, then reverses direction.",
+            cscan: "<strong>C-SCAN (Circular SCAN):</strong> Head moves from one end to the other, then jumps back to the beginning.",
+            look: "<strong>LOOK:</strong> Similar to SCAN, but only goes as far as the last request in each direction.",
+            clook: "<strong>C-LOOK (Circular LOOK):</strong> Similar to C-SCAN, but only goes as far as the last request in each direction.",
+            rss: "<strong>RSS (Random Scheduling):</strong> Serves requests in a random order.",
+            lifo: "<strong>LIFO (Last In First Out):</strong> Serves the most recently arrived request first."
+        };
+        
+        // Update algorithm info when selection changes
+        algorithmSelect.addEventListener("change", () => {
+            const algorithm = algorithmSelect.value;
+            algorithmInfo.innerHTML = algorithmDescriptions[algorithm];
+        });
+        
+        // Disk scheduling algorithms
+        const diskSchedulingAlgorithms = {
+            // First Come First Served
+            fcfs: function(requests, initialHead) {
+                return [...requests]; // Return the requests in the order they arrived
+            },
+            
+            // Shortest Seek Time First
+            sstf: function(requests, initialHead) {
+                const result = [];
+                const unserviced = [...requests];
+                let currentHead = initialHead;
+                
+                while (unserviced.length > 0) {
+                    // Find the closest request
+                    let minDistance = Infinity;
+                    let minIndex = -1;
+                    
+                    for (let i = 0; i < unserviced.length; i++) {
+                        const distance = Math.abs(currentHead - unserviced[i]);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            minIndex = i;
+                        }
+                    }
+                    
+                    // Add the closest request to the result
+                    const nextRequest = unserviced.splice(minIndex, 1)[0];
+                    result.push(nextRequest);
+                    currentHead = nextRequest;
+                }
+                
+                return result;
+            },
+            
+            // SCAN (Elevator)
+            scan: function(requests, initialHead, lastCylinder) {
+                const result = [];
+                const unserviced = [...requests];
+                let currentHead = initialHead;
+                
+                // Sort requests by cylinder number
+                unserviced.sort((a, b) => a - b);
+                
+                // Requests greater than or equal to initial head
+                const greater = unserviced.filter(req => req >= currentHead);
+                // Requests less than initial head
+                const less = unserviced.filter(req => req < currentHead);
+                
+                // First go up to the highest cylinder
+                result.push(...greater);
+                // Then go down to the lowest cylinder
+                result.push(...less.reverse());
+                
+                return result;
+            },
+            
+            // C-SCAN (Circular SCAN)
+            cscan: function(requests, initialHead, lastCylinder) {
+                const result = [];
+                const unserviced = [...requests];
+                let currentHead = initialHead;
+                
+                // Sort requests by cylinder number
+                unserviced.sort((a, b) => a - b);
+                
+                // Requests greater than or equal to initial head
+                const greater = unserviced.filter(req => req >= currentHead);
+                // Requests less than initial head
+                const less = unserviced.filter(req => req < currentHead);
+                
+                // First go up to the highest cylinder
+                result.push(...greater);
+                // Then go back to the beginning and up to the last request less than initial head
+                result.push(...less);
+                
+                return result;
+            },
+            
+            // LOOK
+            look: function(requests, initialHead) {
+                const result = [];
+                const unserviced = [...requests];
+                let currentHead = initialHead;
+                
+                // Sort requests by cylinder number
+                unserviced.sort((a, b) => a - b);
+                
+                // Requests greater than or equal to initial head
+                const greater = unserviced.filter(req => req >= currentHead);
+                // Requests less than initial head
+                const less = unserviced.filter(req => req < currentHead);
+                
+                // First go up to the highest request
+                result.push(...greater);
+                // Then go down to the lowest request
+                result.push(...less.reverse());
+                
+                return result;
+            },
+            
+            // C-LOOK (Circular LOOK)
+            clook: function(requests, initialHead) {
+                const result = [];
+                const unserviced = [...requests];
+                let currentHead = initialHead;
+                
+                // Sort requests by cylinder number
+                unserviced.sort((a, b) => a - b);
+                
+                // Requests greater than or equal to initial head
+                const greater = unserviced.filter(req => req >= currentHead);
+                // Requests less than initial head
+                const less = unserviced.filter(req => req < currentHead);
+                
+                // First go up to the highest request
+                result.push(...greater);
+                // Then go back to the beginning and up to the last request less than initial head
+                result.push(...less);
+                
+                return result;
+            },
+            
+            // Random Scheduling
+            rss: function(requests) {
+                const result = [...requests];
+                // Shuffle the array using Fisher-Yates algorithm
+                for (let i = result.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [result[i], result[j]] = [result[j], result[i]];
+                }
+                return result;
+            },
+            
+            // Last In First Out
+            lifo: function(requests) {
+                return [...requests].reverse();
+            }
+        };
+        
+        // Calculate total seek distance
+        function calculateSeekDistance(sequence, initialHead) {
+            let distance = 0;
+            let currentPosition = initialHead;
+            
+            for (const position of sequence) {
+                distance += Math.abs(position - currentPosition);
+                currentPosition = position;
+            }
+            
+            return distance;
+        }
+        
+        // Initialize the disk visualization
+        function initializeDisk() {
+            // Clear previous tracks
+            diskContainer.innerHTML = '<div class="disk-reflection"></div>';
+            tracks = {};
+            
+            // Create tracks
+            for (let i = lastCylinder, j = lastCylinder; i >= 0; i -= 10, j--) {
+                const track = document.createElement("div");
+                track.classList.add("track");
+                track.style.width = track.style.height = `${(i / lastCylinder) * 400}px`;
+                track.style.left = track.style.top = `${(400 - (i / lastCylinder) * 400) / 2}px`;
+                
+                if (requestSequence.includes(i)) {
+                    track.classList.add("highlight");
+                }
+                
+                const number = document.createElement("div");
+                number.classList.add("track-number");
+                number.style.left = "50%";
+                number.style.top = `${(i / lastCylinder) * 200}px`;
+                track.appendChild(number);
+                
+                diskContainer.appendChild(track);
+                tracks[i] = track;
+            }
+        }
+        
+        // Move the disk head
+        function moveHead(index) {
+            if (index >= sequence.length) {
+                // Reset to beginning
+                isAnimating = false;
+                setTimeout(() => {
+                    if (!isAnimating) {
+                        moveHead(0);
+                        isAnimating = true;
+                    }
+                }, 1000);
+                return;
+            }
+            
+            let targetTrack = sequence[index];
+            let trackSize = (targetTrack / lastCylinder) * 400;
+            let offset = (400 - trackSize) / 2;
+            
+            // Update current track display
+            currentTrackDisplay.textContent = targetTrack;
+            
+            // Remove previous current track highlight
+            const previousTrack = document.querySelector('.current-track');
+            if (previousTrack) {
+                previousTrack.classList.remove('current-track');
+            }
+            
+            // Find the closest track to highlight
+            let closestTrack = null;
+            let minDiff = Infinity;
+            
+            for (const trackNum in tracks) {
+                const diff = Math.abs(parseInt(trackNum) - targetTrack);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestTrack = tracks[trackNum];
+                }
+            }
+            
+            // Highlight current track
+            if (closestTrack) {
+                closestTrack.classList.add('current-track');
+            }
+            
+            // Calculate arm angle based on track position
+            // Map track position (0-lastCylinder) to angle (0-45 degrees)
+            const angle = (targetTrack / lastCylinder) * 45;
+            
+            // Rotate the arm to point at the track
+            armElement.style.transform = `translateY(-50%) rotate(${angle}deg)`;
+            
+            // Stay at the track for a moment before moving to next
+            setTimeout(() => {
+                moveHead(index + 1);
+            }, 1000);
+        }
+        
+        // Simulate button click handler
+        simulateBtn.addEventListener("click", () => {
+            // Parse inputs
+            lastCylinder = parseInt(lastCylinderInput.value) || 200;
+            initialHead = parseInt(initialHeadInput.value) || 50;
+            
+            // Parse request sequence
+            const sequenceInput = requestSequenceInput.value.trim();
+            if (sequenceInput) {
+                requestSequence = sequenceInput.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num) && num >= 0 && num <= lastCylinder);
+            }
+            
+            if (requestSequence.length === 0) {
+                alert("Please enter a valid request sequence.");
+                return;
+            }
+            
+            // Get selected algorithm
+            const algorithm = algorithmSelect.value;
+            
+            // Compute the sequence based on the selected algorithm
+            if (algorithm === "scan" || algorithm === "cscan") {
+                sequence = diskSchedulingAlgorithms[algorithm](requestSequence, initialHead, lastCylinder);
+            } else {
+                sequence = diskSchedulingAlgorithms[algorithm](requestSequence, initialHead);
+            }
+            
+            // Calculate total seek distance
+            const seekDistance = calculateSeekDistance(sequence, initialHead);
+            
+            // Update displays
+            originalSequenceDisplay.textContent = requestSequence.join(", ");
+            computedSequenceDisplay.textContent = sequence.join(", ");
+            seekDistanceDisplay.textContent = seekDistance;
+            
+            // Initialize disk and start animation
+            initializeDisk();
+            isAnimating = true;
+            moveHead(0);
+        });
+        
+        // Adjust rotation speed
+        speedSlider.addEventListener("input", () => {
+            const speed = speedSlider.value;
+            diskContainer.style.animation = `rotateDisk ${11 - speed}s linear infinite`;
+        });
+        
+        // Hover and tilt effects
+        diskContainer.addEventListener('mousemove', (e) => {
+            const rect = diskContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            
+            diskContainer.style.transform = `translateZ(0) rotateX(${y * 0.03}deg) rotateY(${x * 0.03}deg)`;
+        });
+        
+        diskContainer.addEventListener('mouseleave', () => {
+            diskContainer.style.transform = 'translateZ(0)';
+        });
+        
+        // Initialize on page load
+        window.addEventListener("load", () => {
+            initializeDisk();
+            moveHead(0);
+        });
+    </script>
+</body>
+</html>

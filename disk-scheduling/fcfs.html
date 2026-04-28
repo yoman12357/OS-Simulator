@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCFS DISK SCHEDULING ALGORITHM</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --color-teal: #3AAFA9;
+            --color-mint: #B2EBE0;
+            --color-cream: #FDFAF6;
+            --color-amber: #FF9F1C;
+            --color-dark: #2B4141;
+            --color-light: #F7F7F7;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            
+        }
+
+        body {
+            background-color: var(--color-cream);
+            color: var(--color-dark);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--color-teal), #2E8B99);
+            padding: 15px 5%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo:before {
+            content: "\f233";
+            font-family: "Font Awesome 5 Free";
+            margin-right: 10px;
+            font-weight: 900;
+        }
+        
+        .logo:hover {
+            color: white;
+            text-decoration: none;
+            transform: scale(1.05);
+            transition: var(--transition);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+
+        nav li {
+            margin: 0 10px;
+        }
+
+        .button {
+            background-color: var(--color-teal);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: var(--color-amber);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown::after {
+            content: '';
+            position: absolute;
+            height: 13px;
+            width: 100%;
+            bottom: -10px;
+            left: 0;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            min-width: 220px;
+            background: white;
+            box-shadow: var(--shadow);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .dropdown-content a {
+            color: var(--color-dark);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 500;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--color-mint);
+            color: var(--color-dark);
+            padding-left: 25px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        h1 {
+            color: var(--color-dark);
+            font-size: 2.6rem;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-teal), var(--color-mint));
+            border-radius: 2px;
+        }
+
+        .content {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .text-container {
+            flex: 1.5;
+            padding: 40px;
+            text-align: left;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        b {
+            color: var(--color-teal);
+            font-weight: 600;
+        }
+
+        h3 {
+            color: var(--color-teal);
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        h3:before {
+            content: "";
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            background-color: var(--color-amber);
+            margin-right: 12px;
+            border-radius: 50%;
+        }
+
+        .bullet-points {
+            list-style: none;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        .bullet-points li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .bullet-points li:before {
+            content: "\f105";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--color-amber);
+        }
+
+        .sim-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--color-teal), #2E8B99);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .sim-button:before {
+            content: "\f04b";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-right: 10px;
+        }
+
+        .sim-button:hover {
+            background: linear-gradient(135deg, var(--color-amber), #F57C00);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .info-card {
+            background-color: var(--color-light);
+            border-left: 4px solid var(--color-teal);
+            padding: 15px;
+            margin: 25px 0;
+            border-radius: 6px;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .example-table th, .example-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .example-table th {
+            background-color: var(--color-teal);
+            color: white;
+            font-weight: 500;
+        }
+
+        .example-table tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        .example-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .simulation-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-top: 50px;
+        }
+
+        .simulation-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--color-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-teal);
+            outline: none;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-item input {
+            margin-right: 8px;
+        }
+
+        .results-container {
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background-color: var(--color-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item {
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-teal);
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .text-container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+
+            .simulation-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loader-wrapper">
+        <div class="loader"></div>
+    </div>
+    
+    <nav>
+        <a class="logo" href="/index.html">
+            <span class="logo-animation">OS VISUALIZER</span> 
+        </a>
+
+        <ul>
+            <li><button onclick="location.href = '/disk.html';" class="button"><i class="fas fa-home"></i> Home</button></li>
+            <li class="dropdown">
+
+                <div class="dropdown-content">
+                    <a href="/c-code_lifecycle/index.html"><i class="fas fa-code"></i> Code Life Cycle</a>
+                    <a href="/process_scheduling/process.html"><i class="fas fa-tasks"></i> Process Scheduling</a>
+                    <a href="/process_sync/home.html"><i class="fas fa-sync"></i> Process Synchronization</a>
+                    <a href="/banker_algorithm/index.html"><i class="fas fa-university"></i> Bankers Algorithm</a>
+                    <a href="/deadlock_detection/deadlock_detection.html"><i class="fas fa-project-diagram"></i> DeadLock Detection (RAG)</a>
+                    <a href="/mft_mvt/Fit.html"><i class="fas fa-puzzle-piece"></i> Fit Algorithms</a>
+                    <a href="/page_replacement/page_replacement_home.html"><i class="fas fa-exchange-alt"></i> Page Replacement</a>
+                    <a href="/Disk/disk.html"><i class="fas fa-hdd"></i> Disk Scheduling</a>
+                    <a href="/file_allocation/file.html"><i class="fas fa-folder"></i> File Allocation</a>
+                    <a href="/mft_mvt/MVFT.html"><i class="fas fa-memory"></i> MFT and MVT</a>
+                    <a href="/system_calls/system_calls.html"><i class="fas fa-phone-alt"></i> System Calls</a>
+                </div>
+            </li>
+
+
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <h1>First Come First Served (FCFS) Disk Scheduling</h1>
+
+        <div class="content">
+            <div class="text-container">
+                <div class="info-card">
+                    <p>
+                        <b>First Come First Served (FCFS)</b> is the simplest disk scheduling algorithm that services requests in the order they arrive in the disk queue. It's a fair approach but often not the most efficient in terms of total head movement.
+                    </p>
+                </div>
+
+                <h3>How FCFS Works</h3>
+                <p>
+                    In FCFS disk scheduling, the disk controller simply processes I/O requests in the sequence they arrive, regardless of the location of the data being requested. The disk head moves directly from its current position to the cylinder of the next request in the queue.
+                </p>
+                <p>
+                    The algorithm follows these steps:
+                </p>
+                <ul class="bullet-points">
+                    <li>All incoming disk I/O requests are placed at the end of a FIFO queue</li>
+                    <li>The request at the front of the queue is serviced first</li>
+                    <li>After completing a request, the disk head moves to the cylinder of the next request in queue</li>
+                    <li>Total head movement is calculated by finding the absolute difference between consecutive requests</li>
+                </ul>
+
+                <h3>Example Calculation</h3>
+                <p>
+                    Let's say we have a disk with 200 cylinders (0-199), and the head is currently at position 50. The request queue is:
+                </p>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>Request Sequence</th>
+                            <th>95</th>
+                            <th>180</th>
+                            <th>34</th>
+                            <th>119</th>
+                            <th>11</th>
+                            <th>123</th>
+                            <th>62</th>
+                        </tr>
+                    </thead>
+                </table>
+
+                <p>
+                    The FCFS will process these requests in order without any rearrangement:
+                </p>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>Head Movement</th>
+                            <th>|50-95|</th>
+                            <th>|95-180|</th>
+                            <th>|180-34|</th>
+                            <th>|34-119|</th>
+                            <th>|119-11|</th>
+                            <th>|11-123|</th>
+                            <th>|123-62|</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Distance</td>
+                            <td>45</td>
+                            <td>85</td>
+                            <td>146</td>
+                            <td>85</td>
+                            <td>108</td>
+                            <td>112</td>
+                            <td>61</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    Total head movement = 45 + 85 + 146 + 85 + 108 + 112 + 61 = 642 cylinders
+                </p>
+
+                <h3>Advantages</h3>
+                <ul class="bullet-points">
+                    <li>Simple to implement and understand</li>
+                    <li>Fair to all processes - no starvation</li>
+                    <li>Low overhead as no additional processing is required</li>
+                </ul>
+
+                <h3>Disadvantages</h3>
+                <ul class="bullet-points">
+                    <li>Often results in excessive head movement</li>
+                    <li>Does not consider the current head position when scheduling the next request</li>
+                    <li>Not optimized for performance or throughput</li>
+                    <li>Can lead to the "wild swing" problem where head moves back and forth across the disk</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="simulation-container">
+            <h3>FCFS Disk Scheduling Simulator</h3>
+            <p>Use this simulator to visualize how the FCFS disk scheduling algorithm works with your custom inputs.</p>
+
+            <div class="simulation-form">
+                <div class="form-group">
+                    <label for="cylinderSequence">Cylinder Request Sequence (comma separated)</label>
+                    <input type="text" class="form-control" id="cylinderSequence" placeholder="e.g., 95,180,34,119,11,123,62" value="95,180,34,119,11,123,62">
+                </div>
+                
+                <div class="form-group">
+                    <label for="initialCylinder">Initial Head Position</label>
+                    <input type="number" class="form-control" id="initialCylinder" placeholder="e.g., 50" min="0" value="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastCylinder">Last Cylinder (Max Disk Size)</label>
+                    <input type="number" class="form-control" id="lastCylinder" placeholder="e.g., 199" min="1" value="199">
+                </div>
+                
+                <!-- Added animation speed control -->
+                <div class="form-group">
+                    <label for="animationSpeed">Animation Speed</label>
+                    <select class="form-control" id="animationSpeed">
+                        <option value="slow">Slow</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="fast">Fast</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="simulateBtn" class="sim-button">Run FCFS Simulation</button>
+
+            <div class="results-container" id="resultsContainer" style="display: none;">
+                <div class="result-card">
+                    <div class="result-item">
+                        <div class="result-value" id="totalSeekTime">0</div>
+                        <div class="result-label">Total Seek Time</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="averageSeekTime">0</div>
+                        <div class="result-label">Average Seek Time</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="seekSequence">-</div>
+                        <div class="result-label">Seek Sequence</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div id="seekChart"></div>
+                </div>
+
+                <!-- Added disk visualization -->   
+                
+                <!-- Added step-by-step visualization -->
+                <div class="step-visualizer">
+                    <h4>Step-by-Step Visualization</h4>
+                    <div class="step-controls">
+                        <button id="prevStepBtn" class="step-button" disabled>
+                            <i class="fas fa-step-backward"></i> Previous
+                        </button>
+                        <button id="autoPlayBtn" class="step-button">
+                            <i class="fas fa-play"></i> Auto Play
+                        </button>
+                        <button id="nextStepBtn" class="step-button">
+                            <i class="fas fa-step-forward"></i> Next
+                        </button>
+                    </div>
+                    <div class="steps-container" id="stepsContainer">
+                        <div class="step-info" id="stepInfo">
+                            Ready to start visualization
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Added disk visualization -->
+                <div class="disk-visualization">
+                    <h4>Disk Head Movement Visualization</h4>
+                    <div class="disk-container" id="diskContainer">
+                        <div class="disk-track" id="diskTrack"></div>
+                        <div class="disk-head" id="diskHead"></div>
+                        <div class="request-markers" id="requestMarkers"></div>
+                    </div>
+                    <div class="disk-labels">
+                        <span class="disk-min">0</span>
+                        <span class="disk-current" id="currentPosition">50</span>
+                        <span class="disk-max" id="maxCylinder">199</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        footer {
+            background: var(--color-dark);
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 80px;
+            position: relative;
+        }
+    
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    
+        .footer-wave {
+            position: absolute;
+            top: -80px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%232B4141' fill-opacity='1' d='M0,192L48,202.7C96,213,192,235,288,229.3C384,224,480,192,576,181.3C672,171,768,181,864,197.3C960,213,1056,235,1152,224C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+    
+        .social-links {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+    
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: var(--transition);
+        }
+    
+        .social-links a:hover {
+            background: var(--color-teal);
+            transform: translateY(-5px);
+        }
+    </style>
+    
+    <footer>
+        <div class="footer-wave"></div>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://github.com/Srishti-K15/OS-project" target="_blank"><i class="fab fa-github"></i></a>
+            </div>
+            <p>&copy; 2025 OS Visualizer. All rights reserved.</p>
+        </div>
+    </footer>
+    
+
+    <style>
+        /* Added Styles for Disk Visualization */
+        .disk-visualization {
+            margin-top: 30px;
+            background: #f7f7f7;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .disk-visualization h4 {
+            color: var(--color-teal);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .disk-container {
+            position: relative;
+            height: 60px;
+            margin: 20px 0;
+        }
+        
+        .disk-track {
+            position: absolute;
+            width: 100%;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .disk-head {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--color-amber);
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 0 3px rgba(255,159,28,0.3);
+            transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .disk-head::after {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid var(--color-amber);
+        }
+        
+        .request-marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: var(--color-teal);
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+        
+        .request-marker.active {
+            background-color: #ff5252;
+            box-shadow: 0 0 0 4px rgba(255,82,82,0.3);
+            animation: pulse 1s infinite;
+        }
+        
+        .request-marker.completed {
+            background-color: #4CAF50;
+        }
+        
+        .disk-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .disk-current {
+            font-weight: bold;
+            color: var(--color-amber);
+        }
+        
+        /* Step-by-step visualization */
+        .step-visualizer {
+            margin-top: 30px;
+            background: #f7f7f7;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .step-visualizer h4 {
+            color: var(--color-teal);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .step-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .step-button {
+            background: var(--color-teal);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-button:hover {
+            background: var(--color-amber);
+        }
+        
+        .step-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .steps-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background: white;
+            min-height: 120px;
+        }
+        
+        .step-info {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255,82,82,0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(255,82,82,0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255,82,82,0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animated-number {
+            display: inline-block;
+            animation: countUp 1s ease-out forwards;
+        }
+        
+        @keyframes countUp {
+            from {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .highlight-movement {
+            animation: highlight 1s ease-out;
+        }
+        
+        @keyframes highlight {
+            0% {
+                background-color: rgba(58, 175, 169, 0.2);
+            }
+            50% {
+                background-color: rgba(58, 175, 169, 0.5);
+            }
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const simulateBtn = document.getElementById('simulateBtn');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const diskHead = document.getElementById('diskHead');
+            const diskTrack = document.getElementById('diskTrack');
+            const requestMarkers = document.getElementById('requestMarkers');
+            const currentPosition = document.getElementById('currentPosition');
+            const maxCylinder = document.getElementById('maxCylinder');
+            const stepInfo = document.getElementById('stepInfo');
+            const prevStepBtn = document.getElementById('prevStepBtn');
+            const nextStepBtn = document.getElementById('nextStepBtn');
+            const autoPlayBtn = document.getElementById('autoPlayBtn');
+            
+            let seekSequence = [];
+            let movements = [];
+            let currentStep = -1;
+            let autoPlayInterval = null;
+            
+            simulateBtn.addEventListener('click', function() {
+                // Get input values
+                const cylinderSequenceInput = document.getElementById('cylinderSequence').value;
+                const initialCylinder = parseInt(document.getElementById('initialCylinder').value);
+                const lastCylinder = parseInt(document.getElementById('lastCylinder').value);
+                
+                // Validate inputs
+                if(!cylinderSequenceInput || isNaN(initialCylinder) || isNaN(lastCylinder)) {
+                    alert('Please fill in all fields with valid values');
+                    return;
+                }
+
+                const cylinderSequence = cylinderSequenceInput.split(',').map(num => parseInt(num.trim()));
+                
+                for(let cylinder of cylinderSequence) {
+                    if(isNaN(cylinder) || cylinder < 0 || cylinder > lastCylinder) {
+                        alert(`Invalid cylinder value: ${cylinder}. All cylinders must be between 0 and ${lastCylinder}`);
+                        return;
+                    }
+                }
+                
+                // Calculate FCFS sequence and movements
+                seekSequence = [initialCylinder, ...cylinderSequence];
+                movements = [];
+                let totalSeekTime = 0;
+                
+                for(let i = 0; i < seekSequence.length - 1; i++) {
+                    const distance = Math.abs(seekSequence[i + 1] - seekSequence[i]);
+                    totalSeekTime += distance;
+                    movements.push({
+                        from: seekSequence[i],
+                        to: seekSequence[i + 1],
+                        distance: distance
+                    });
+                }
+                
+                const averageSeekTime = (totalSeekTime / cylinderSequence.length).toFixed(2);
+                
+                // Update results
+                document.getElementById('totalSeekTime').textContent = totalSeekTime;
+                document.getElementById('averageSeekTime').textContent = averageSeekTime;
+                document.getElementById('seekSequence').textContent = seekSequence.join(' → ');
+                
+                // Show results container
+                resultsContainer.style.display = 'block';
+                
+                // Setup disk visualization
+                setupDiskVisualization(seekSequence, lastCylinder);
+                
+                // Draw the graph with Plotly
+                drawGraph(seekSequence, lastCylinder);
+                
+                // Reset step visualization
+                resetStepVisualization();
+                
+                // Scroll to results
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            function setupDiskVisualization(seekSequence, lastCylinder) {
+                // Update cylinder labels
+                currentPosition.textContent = seekSequence[0];
+                maxCylinder.textContent = lastCylinder;
+                
+                // Clear previous markers
+                requestMarkers.innerHTML = '';
+                
+                // Set disk head initial position
+                const headPosition = (seekSequence[0] / lastCylinder) * 100;
+                diskHead.style.left = `${headPosition}%`;
+                
+                // Create markers for each request
+                seekSequence.forEach((cylinder, index) => {
+                    if (index > 0) {  // Skip initial position
+                        const marker = document.createElement('div');
+                        marker.className = 'request-marker';
+                        marker.style.left = `${(cylinder / lastCylinder) * 100}%`;
+                        marker.setAttribute('data-cylinder', cylinder);
+                        marker.setAttribute('data-index', index);
+                        marker.title = `Request ${index}: Cylinder ${cylinder}`;
+                        requestMarkers.appendChild(marker);
+                    }
+                });
+            }
+            
+            function drawGraph(seekSequence, lastCylinder) {
+                const xValues = Array.from({ length: seekSequence.length }, (_, i) => i);
+                
+                const trace = {
+                    x: xValues,
+                    y: seekSequence,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    marker: {
+                        size: 10,
+                        color: 'rgba(58, 175, 169, 0.8)'
+                    },
+                    line: {
+                        color: '#3AAFA9',
+                        width: 2
+                    }
+                };
+                
+                const annotations = seekSequence.map((value, index) => ({
+                    x: index,
+                    y: value,
+                    text: value.toString(),
+                    showarrow: false,
+                    font: {
+                        family: 'Poppins',
+                        size: 12,
+                        color: '#2B4141'
+                    },
+                    yshift: 15
+                }));
+                
+                const layout = {
+                    title: 'FCFS Disk Scheduling Head Movement',
+                    xaxis: {
+                        title: 'Request Sequence',
+                        tickmode: 'array',
+                        tickvals: xValues,
+                        ticktext: ['Initial', ...seekSequence.slice(1).map((_, i) => `Request ${i+1}`)]
+                    },
+                    yaxis: {
+                        title: 'Cylinder Number',
+                        range: [0, lastCylinder]
+                    },
+                    annotations: annotations,
+                    hovermode: 'closest',
+                    font: {
+                        family: 'Poppins'
+                    },
+                    margin: {
+                        l: 60,
+                        r: 30,
+                        t: 80,
+                        b: 70
+                    },
+                    // Added animation settings
+                    transition: {
+                        duration: 500,
+                        easing: 'cubic-in-out'
+                    },
+                    frame: {
+                        duration: 500
+                    }
+                };
+                
+                Plotly.newPlot('seekChart', [trace], layout, {responsive: true});
+                
+                // Add animated paths to the plot
+                animatePlotPath(seekSequence, 0);
+            }
+            
+            function animatePlotPath(seekSequence, startIndex) {
+                if (startIndex >= seekSequence.length - 1) return;
+                
+                const plotDiv = document.getElementById('seekChart');
+                
+                // Create animation data with one point at a time
+                const frameData = [];
+                for (let i = 0; i <= startIndex + 1; i++) {
+                    frameData.push({
+                        x: [i],
+                        y: [seekSequence[i]]
+                    });
+                }
+                
+                // Animate the line drawing
+                const animation = {
+                    data: [{
+                        x: frameData.map(d => d.x[0]),
+                        y: frameData.map(d => d.y[0])
+                    }],
+                    traces: [0],
+                    layout: {},
+                    config: {duration: 500}
+                };
+                
+                Plotly.animate(plotDiv, animation, {
+                    transition: {
+                        duration: 500,
+                        easing: 'cubic-in-out'
+                    },
+                    frame: {
+                        duration: 500,
+                        redraw: false
+                    }
+                });
+                
+                // Call next animation
+                if (startIndex < seekSequence.length - 2) {
+                    setTimeout(() => {
+                        animatePlotPath(seekSequence, startIndex + 1);
+                    }, 600);
+                }
+            }
+            
+            function resetStepVisualization() {
+                currentStep = -1;
+                prevStepBtn.disabled = true;
+                nextStepBtn.disabled = false;
+                
+                if (autoPlayInterval) {
+                    clearInterval(autoPlayInterval);
+                    autoPlayInterval = null;
+                    autoPlayBtn.innerHTML = '<i class="fas fa-play"></i> Auto Play';
+                }
+                
+                stepInfo.innerHTML = 'Click "Next" to start the step-by-step visualization or "Auto Play" to run automatically.';
+                
+                // Reset markers
+                const markers = document.querySelectorAll('.request-marker');
+                markers.forEach(marker => {
+                    marker.className = 'request-marker';
+                });
+                
+                // Reset disk head position
+                const initialPosition = (seekSequence[0] / parseInt(document.getElementById('lastCylinder').value)) * 100;
+                diskHead.style.left = `${initialPosition}%`;
+            }
+            
+            // Step control functions
+            prevStepBtn.addEventListener('click', function() {
+                moveToStep(currentStep - 1);
+            });
+            
+            nextStepBtn.addEventListener('click', function() {
+                moveToStep(currentStep + 1);
+            });
+            
+            autoPlayBtn.addEventListener('click', function() {
+                if (autoPlayInterval) {
+                    // Stop auto play
+                    clearInterval(autoPlayInterval);
+                    autoPlayInterval = null;
+                    autoPlayBtn.innerHTML = '<i class="fas fa-play"></i> Auto Play';
+                } else {
+                    // Start auto play
+                    const speed = document.getElementById('animationSpeed').value;
+                    let interval = 2000; // Medium speed
+                    
+                    if (speed === 'slow') interval = 3000;
+                    if (speed === 'fast') interval = 1000;
+                    
+                    autoPlayBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                    
+                    // Run first step immediately if we're at start
+                    if (currentStep === -1) {
+                        moveToStep(0);
+                    }
+                    
+                    autoPlayInterval = setInterval(() => {
+                        if (currentStep < movements.length - 1) {
+                            moveToStep(currentStep + 1);
+                        } else {
+                            // End of animation
+                            clearInterval(autoPlayInterval);
+                            autoPlayInterval = null;
+                            autoPlayBtn.innerHTML = '<i class="fas fa-play"></i> Auto Play';
+                        }
+                    }, interval);
+                }
+            });
+            
+            function moveToStep(step) {
+                if (step < 0 || step >= movements.length) return;
+                
+                currentStep = step;
+                
+                // Update buttons state
+                prevStepBtn.disabled = (currentStep === 0);
+                nextStepBtn.disabled = (currentStep === movements.length - 1);
+                
+                const movement = movements[currentStep];
+                const lastCylinder = parseInt(document.getElementById('lastCylinder').value);
+                
+                // Update step info
+                stepInfo.innerHTML = `
+                    <div class="highlight-movement">
+                        <strong>Step ${currentStep + 1}:</strong> Moving disk head from cylinder 
+                        <span class="animated-number">${movement.from}</span> to 
+                        <span class="animated-number">${movement.to}</span><br>
+                        Distance moved: <span class="animated-number">${movement.distance}</span> cylinders
+                    </div>
+                `;
+                
+                // Animate disk head
+                const newPosition = (movement.to / lastCylinder) * 100;
+                diskHead.style.left = `${newPosition}%`;
+                currentPosition.textContent = movement.to;
+                
+                // Update markers
+                const markers = document.querySelectorAll('.request-marker');
+                markers.forEach(marker => {
+                    const index = parseInt(marker.getAttribute('data-index'));
+                    
+                    if (index === currentStep + 1) {
+                        marker.className = 'request-marker active';
+                    } else if (index <= currentStep + 1) {
+                        marker.className = 'request-marker completed';
+                    } else {
+                        marker.className = 'request-marker';
+                    }
+                });
+                
+                // Highlight current graph point
+                const plotDiv = document.getElementById('seekChart');
+                Plotly.restyle(plotDiv, {
+                    'marker.size': Array(seekSequence.length).fill(10).map((size, i) => 
+                        (i === currentStep + 1) ? 15 : size
+                    ),
+                    'marker.color': Array(seekSequence.length).fill('rgba(58, 175, 169, 0.8)').map((color, i) => 
+                        (i === currentStep + 1) ? 'rgba(255, 159, 28, 0.8)' : color
+                    )
+                });
+            }
+        });
+    </script>
+</body>
+</html>

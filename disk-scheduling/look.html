@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOOK DISK SCHEDULING ALGORITHM</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --color-teal: #3AAFA9;
+            --color-mint: #B2EBE0;
+            --color-cream: #FDFAF6;
+            --color-amber: #FF9F1C;
+            --color-dark: #2B4141;
+            --color-light: #F7F7F7;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-cream);
+            color: var(--color-dark);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--color-teal), #2E8B99);
+            padding: 15px 5%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo:before {
+            content: "\f233";
+            font-family: "Font Awesome 5 Free";
+            margin-right: 10px;
+            font-weight: 900;
+        }
+        
+        .logo:hover {
+            color: white;
+            text-decoration: none;
+            transform: scale(1.05);
+            transition: var(--transition);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+        }
+
+        nav li {
+            margin: 0 10px;
+        }
+
+        .button {
+            background-color: var(--color-teal);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: var(--color-amber);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .button:active {
+            transform: translateY(1px);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown::after {
+            content: '';
+            position: absolute;
+            height: 13px;
+            width: 100%;
+            bottom: -10px;
+            left: 0;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            min-width: 220px;
+            background: white;
+            box-shadow: var(--shadow);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            margin-top: 0;
+            padding: 5px 0;
+            pointer-events: none;
+        }
+
+        .dropdown:hover .dropdown-content,
+        .dropdown-content:hover {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(5px);
+            pointer-events: auto;
+        }
+
+        .dropdown-content a {
+            color: var(--color-dark);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 500;
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--color-mint);
+            color: var(--color-dark);
+            padding-left: 25px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        h1 {
+            color: var(--color-dark);
+            font-size: 2.6rem;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-teal), var(--color-mint));
+            border-radius: 2px;
+        }
+
+        .content {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .text-container {
+            flex: 1.5;
+            padding: 40px;
+            text-align: left;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        b {
+            color: var(--color-teal);
+            font-weight: 600;
+        }
+
+        h3 {
+            color: var(--color-teal);
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        h3:before {
+            content: "";
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            background-color: var(--color-amber);
+            margin-right: 12px;
+            border-radius: 50%;
+        }
+
+        .bullet-points {
+            list-style: none;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        .bullet-points li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .bullet-points li:before {
+            content: "\f105";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--color-amber);
+        }
+
+        .sim-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--color-teal), #2E8B99);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .sim-button:before {
+            content: "\f04b";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-right: 10px;
+        }
+
+        .sim-button:hover {
+            background: linear-gradient(135deg, var(--color-amber), #F57C00);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .animation-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .animation-button {
+            padding: 10px 20px;
+            background: var(--color-teal);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .animation-button:hover {
+            background: var(--color-amber);
+        }
+
+        .animation-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .info-card {
+            background-color: var(--color-light);
+            border-left: 4px solid var(--color-teal);
+            padding: 15px;
+            margin: 25px 0;
+            border-radius: 6px;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .example-table th, .example-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .example-table th {
+            background-color: var(--color-teal);
+            color: white;
+            font-weight: 500;
+        }
+
+        .example-table tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        .example-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .simulation-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-top: 50px;
+        }
+
+        .simulation-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--color-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-teal);
+            outline: none;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-item input {
+            margin-right: 8px;
+        }
+
+        .results-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        .result-card {
+            background-color: var(--color-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .result-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            margin: 10px 0;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-teal);
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        .disk-visualization {
+            width: 100%;
+            height: 150px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-top: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .disk-track {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #999;
+            border-right: 1px dashed #bbb;
+        }
+
+        .disk-head {
+            position: absolute;
+            width: 20px;
+            height: 100px;
+            background: var(--color-amber);
+            border-radius: 5px;
+            top: 25px;
+            transform: translateX(-50%);
+            transition: left 0.5s ease-in-out;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .disk-head::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid var(--color-amber);
+        }
+
+        .seek-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+        }
+
+        .seek-table th, .seek-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .seek-table th {
+            background-color: var(--color-teal);
+            color: white;
+        }
+
+        .seek-table tr.current {
+            background-color: rgba(255, 159, 28, 0.2);
+        }
+
+        .step-indicator {
+            background: var(--color-teal);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: var(--color-teal);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .slider-container {
+            margin-top: 20px;
+            padding: 0 15px;
+        }
+
+        .speed-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-teal);
+            cursor: pointer;
+        }
+
+        .speed-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--color-teal);
+            cursor: pointer;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .cylinder-markers {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .cylinder-marker {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #f6f9fc, #f1f4f8);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stats-item {
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-teal);
+            margin-bottom: 5px;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .step-by-step {
+            margin-top: 30px;
+        }
+
+        .step-card {
+            background: white;
+            border-left: 4px solid var(--color-teal);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .step-card.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .text-container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+
+            .simulation-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-card {
+                flex-direction: column;
+            }
+            
+            .result-item {
+                margin: 10px 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a class="logo" href="../index.html">OS VISUALIZER</a>
+        <ul>
+            <li><button onclick="location.href = '../disk.html';" class="button"><i class="fas fa-home"></i> Home</button></li>
+            <li class="dropdown">
+
+                <div class="dropdown-content">
+                    <a href="../process_scheduling/process.html"><i class="fas fa-tasks"></i> Process Scheduling</a>
+                    <a href="../process_sync/home.html"><i class="fas fa-sync"></i> Process Synchronization</a>
+                    <a href="../Bankers/bankers.html"><i class="fas fa-university"></i> Bankers Algorithm</a>
+                    <a href="../mft_mvt/Fit.html"><i class="fas fa-puzzle-piece"></i> Fit Algorithms</a>
+                    <a href="../page_replacement/page_replacement_home.html"><i class="fas fa-exchange-alt"></i> Page Replacement</a>
+                    <a href="../Disk/disk.html"><i class="fas fa-hdd"></i> Disk Scheduling</a>
+                    <a href="../file_allocation/file.html"><i class="fas fa-folder"></i> File Allocation</a>
+                    <a href="../mft_mvt/MVFT.html"><i class="fas fa-memory"></i> MFT and MVT</a>
+                </div>
+            </li>
+
+
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <h1>LOOK Disk Scheduling Algorithm</h1>
+
+        <div class="content">
+            <div class="text-container">
+                <div class="info-card">
+                    <p>
+                        <b>LOOK</b> is a modified version of the SCAN disk scheduling algorithm. In LOOK, the disk head moves in a particular direction until there are no more requests in that direction, then reverses to service requests in the opposite direction. Unlike SCAN, the LOOK algorithm doesn't go all the way to the end of the disk - it only goes as far as the last request in each direction.
+                    </p>
+                </div>
+
+                <h3>How LOOK Works</h3>
+                <p>
+                    LOOK is an optimization of the SCAN algorithm that avoids unnecessary movement of the disk head to the ends of the disk when there are no pending requests in those areas.
+                </p>
+                <p>
+                    The algorithm follows these steps:
+                </p>
+                <ul class="bullet-points">
+                    <li>The disk arm moves in a particular direction (increasing or decreasing cylinder numbers), servicing all requests in its path</li>
+                    <li>It continues until there are no more requests in that direction</li>
+                    <li>The head then reverses its direction and services requests in the opposite direction</li>
+                    <li>This process continues, going back and forth between directions</li>
+                </ul>
+
+                <h3>Example Calculation</h3>
+                <p>
+                    Let's say we have a disk with 200 cylinders (0-199), and the head is currently at position 50, moving towards higher cylinder numbers. The request queue is:
+                </p>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>Request Sequence</th>
+                            <th>95</th>
+                            <th>180</th>
+                            <th>34</th>
+                            <th>119</th>
+                            <th>11</th>
+                            <th>123</th>
+                            <th>62</th>
+                        </tr>
+                    </thead>
+                </table>
+
+                <p>
+                    The LOOK algorithm will sort these requests based on the current head position and direction of movement:
+                </p>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th colspan="7">Requests Sorted by LOOK Algorithm (Initial Position: 50, Direction: Increasing)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>62</td>
+                            <td>95</td>
+                            <td>119</td>
+                            <td>123</td>
+                            <td>180</td>
+                            <td>34</td>
+                            <td>11</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    The head movements will be:
+                </p>
+
+                <table class="example-table">
+                    <thead>
+                        <tr>
+                            <th>Head Movement</th>
+                            <th>|50-62|</th>
+                            <th>|62-95|</th>
+                            <th>|95-119|</th>
+                            <th>|119-123|</th>
+                            <th>|123-180|</th>
+                            <th>|180-34|</th>
+                            <th>|34-11|</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Distance</td>
+                            <td>12</td>
+                            <td>33</td>
+                            <td>24</td>
+                            <td>4</td>
+                            <td>57</td>
+                            <td>146</td>
+                            <td>23</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    Total head movement = 12 + 33 + 24 + 4 + 57 + 146 + 23 = 299 cylinders
+                </p>
+                <p>
+                    Note: Unlike SCAN, LOOK does not go all the way to the end of the disk (cylinder 199) before reversing direction. Instead, it only goes as far as the last request (cylinder 180) in the increasing direction.
+                </p>
+
+                <h3>Differences Between SCAN and LOOK</h3>
+                <ul class="bullet-points">
+                    <li>SCAN moves the disk arm to the end of the disk even if there are no requests in that area, while LOOK only moves to the last request in each direction</li>
+                    <li>LOOK is more efficient in terms of total head movement as it avoids unnecessary travel to the disk boundaries</li>
+                    <li>LOOK still provides the same directional fairness as SCAN, preventing starvation of requests</li>
+                    <li>LOOK is easier to implement than C-LOOK as it doesn't require a circular wraparound</li>
+                </ul>
+
+                <h3>Advantages</h3>
+                <ul class="bullet-points">
+                    <li>Reduces unnecessary head movement compared to SCAN</li>
+                    <li>Provides better average seek times than SCAN</li>
+                    <li>Prevents indefinite postponement (starvation) of any request</li>
+                    <li>Offers good performance for systems with high loads</li>
+                    <li>Suitable for systems where disk requests are distributed throughout the disk</li>
+                </ul>
+
+                <h3>Disadvantages</h3>
+                <ul class="bullet-points">
+                    <li>Slightly more complex to implement than simpler algorithms like FCFS</li>
+                    <li>May not be optimal for all workload patterns</li>
+                    <li>Does not provide uniform waiting times like C-LOOK</li>
+                    <li>Requests at the recently-visited end of the disk may have to wait for the head to traverse the entire disk twice</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="simulation-container">
+            <h3>LOOK Disk Scheduling Simulator</h3>
+            <p>Use this interactive simulator to visualize how the LOOK disk scheduling algorithm works with your custom inputs.</p>
+
+            <div class="simulation-form">
+                <div class="form-group">
+                    <label for="cylinderSequence">Cylinder Request Sequence (comma separated)</label>
+                    <input type="text" class="form-control" id="cylinderSequence" placeholder="e.g., 95,180,34,119,11,123,62" value="95,180,34,119,11,123,62">
+                </div>
+                
+                <div class="form-group">
+                    <label for="initialCylinder">Initial Head Position</label>
+                    <input type="number" class="form-control" id="initialCylinder" placeholder="e.g., 50" min="0" value="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastCylinder">Last Cylinder (Max Disk Size)</label>
+                    <input type="number" class="form-control" id="lastCylinder" placeholder="e.g., 199" min="1" value="199">
+                </div>
+
+                <div class="form-group">
+                    <label>Initial Direction</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="direction" value="increasing" checked> Increasing
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="direction" value="decreasing"> Decreasing
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="simulateBtn" class="sim-button">Run LOOK Simulation</button>
+
+            <div class="results-container" id="resultsContainer" style="display: none; overflow-x: auto;">
+                <div class="stats-card">
+                    <h3 style="margin-top: 0;">Simulation Results</h3>
+                    <div class="stats-grid">
+                        <div class="stats-item">
+                            <div class="stats-value" id="totalSeekTime">0</div>
+                            <div class="stats-label">Total Seek Distance</div>
+                        </div>
+                        <div class="stats-item">
+                            <div class="stats-value" id="averageSeekTime">0</div>
+                            <div class="stats-label">Average Seek Distance</div>
+                        </div>
+                        <div class="stats-item">
+                            <div class="stats-value" id="requestCount">0</div>
+                            <div class="stats-label">Request Count</div>
+                        </div>
+                        <div class="stats-item">
+                            <div class="stats-value" id="largestJump">0</div>
+                            <div class="stats-label">Largest Jump</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div id="seekChart"></div>
+                </div>
+
+                <h3>Disk Head Movement Visualization</h3>
+                <div class="disk-visualization" id="diskVisualization">
+                    <div class="disk-head" id="diskHead">H</div>
+                </div>
+
+                <div class="animation-buttons">
+                    <button id="playBtn" class="animation-button"><i class="fas fa-play"></i> Play</button>
+                    <button id="pauseBtn" class="animation-button" disabled><i class="fas fa-pause"></i> Pause</button>
+                    <button id="resetBtn" class="animation-button"><i class="fas fa-redo"></i> Reset</button>
+                    <button id="nextStepBtn" class="animation-button"><i class="fas fa-step-forward"></i> Next Step</button>
+                </div>
+
+                <div class="slider-container">
+                    <label for="speedSlider">Animation Speed:</label>
+                    <input type="range" min="1" max="5" value="3" class="speed-slider" id="speedSlider">
+                    <div class="slider-labels">
+                        <span>Slower</span>
+                        <span>Faster</span>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+
+                <h3>Seek Operations</h3>
+                <div class="table-responsive">
+                    <table class="seek-table" id="seekTable">
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Distance</th>
+                                <th>Direction</th>
+                                <th>Total Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="seekTableBody">
+                        
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="step-by-step" id="stepExplanation">
+                    <h3>Step-by-Step Explanation</h3>
+                 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      
+        let animationSpeed = 3;
+        let currentStep = 0;
+        let isPlaying = false;
+        let animationInterval;
+        let seekSequence = [];
+        let distanceSequence = [];
+        let cumulativeDistance = [];
+        let maxCylinder = 199;
+        
+        document.getElementById('simulateBtn').addEventListener('click', function() {
+            runSimulation();
+        });
+        
+        document.getElementById('playBtn').addEventListener('click', function() {
+            startAnimation();
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            pauseAnimation();
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            resetAnimation();
+        });
+        
+        document.getElementById('nextStepBtn').addEventListener('click', function() {
+            nextStep();
+        });
+        
+        document.getElementById('speedSlider').addEventListener('input', function() {
+            animationSpeed = parseInt(this.value);
+        });
+        
+        function runSimulation() {
+        
+            const cylinderInput = document.getElementById('cylinderSequence').value;
+            const initialCylinder = parseInt(document.getElementById('initialCylinder').value);
+            const lastCylinderInput = document.getElementById('lastCylinder').value;
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            
+         
+            if (!cylinderInput || isNaN(initialCylinder)) {
+                alert('Please enter valid values for all fields.');
+                return;
+            }
+            
+            const cylinderSequence = cylinderInput.split(',').map(num => {
+                const val = parseInt(num.trim());
+                return isNaN(val) ? 0 : val;
+            });
+            
+            maxCylinder = lastCylinderInput ? parseInt(lastCylinderInput) : 199;
+            
+           
+            for (const cylinder of cylinderSequence) {
+                if (cylinder < 0 || cylinder > maxCylinder) {
+                    alert(`Cylinder ${cylinder} is outside the valid range (0-${maxCylinder}).`);
+                    return;
+                }
+            }
+            
+           
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+        
+            const result = calculateLOOK(cylinderSequence, initialCylinder, direction);
+            seekSequence = result.seekSequence;
+            distanceSequence = result.distanceSequence;
+            cumulativeDistance = result.cumulativeDistance;
+            updateStatistics(result);  
+       
+            drawSeekChart(seekSequence);
+            
+            setupDiskVisualization(seekSequence, maxCylinder);
+        
+            updateSeekTable(seekSequence, distanceSequence, cumulativeDistance, initialCylinder);
+            
+            createStepExplanation(seekSequence, distanceSequence, cumulativeDistance, initialCylinder, direction);
+            
+            resetAnimation();
+          
+            document.getElementById('resultsContainer').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        function calculateLOOK(cylinderSequence, initialPosition, direction) {
+            const requests = [...cylinderSequence];
+            const seekSequence = [initialPosition];
+            const distanceSequence = [];
+            const cumulativeDistance = [0];
+            let currentPosition = initialPosition;
+            let totalSeekTime = 0;
+            
+            if (!requests.includes(initialPosition)) {
+                requests.push(initialPosition);
+            }
+            
+            const sortedRequests = [...requests].sort((a, b) => a - b);
+            
+            const initialIndex = sortedRequests.indexOf(initialPosition);
+            
+            let finalSequence = [];
+            
+            if (direction === 'increasing') {
+               
+                const greaterCylinders = sortedRequests.filter(cyl => cyl > initialPosition);
+                
+             
+                const lesserCylinders = sortedRequests.filter(cyl => cyl <= initialPosition).reverse();
+                
+                finalSequence = [initialPosition, ...greaterCylinders, ...lesserCylinders];
+            } else {
+               
+                const lesserCylinders = sortedRequests.filter(cyl => cyl < initialPosition).reverse();
+                
+                const greaterCylinders = sortedRequests.filter(cyl => cyl >= initialPosition);
+
+                finalSequence = [initialPosition, ...lesserCylinders, ...greaterCylinders];
+            }
+         
+            if (finalSequence.length > 1 && finalSequence[0] === finalSequence[1]) {
+                finalSequence.splice(1, 1);
+            }
+      
+            for (let i = 1; i < finalSequence.length; i++) {
+                const distance = Math.abs(finalSequence[i] - finalSequence[i-1]);
+                distanceSequence.push(distance);
+                totalSeekTime += distance;
+                cumulativeDistance.push(totalSeekTime);
+                seekSequence.push(finalSequence[i]);
+            }
+
+            const averageSeekTime = totalSeekTime / (finalSequence.length - 1);
+            const largestJump = Math.max(...distanceSequence);
+            
+            return {
+                seekSequence,
+                distanceSequence,
+                cumulativeDistance,
+                totalSeekTime,
+                averageSeekTime,
+                largestJump,
+                requestCount: cylinderSequence.length
+            };
+        }
+        
+        function updateStatistics(result) {
+            document.getElementById('totalSeekTime').textContent = result.totalSeekTime;
+            document.getElementById('averageSeekTime').textContent = result.averageSeekTime.toFixed(2);
+            document.getElementById('requestCount').textContent = result.requestCount;
+            document.getElementById('largestJump').textContent = result.largestJump;
+        }
+        
+        function drawSeekChart(seekSequence) {
+            const trace = {
+                y: Array.from({length: seekSequence.length}, (_, i) => i), 
+                x: seekSequence, 
+                mode: 'lines+markers',
+                marker: {
+                    color: '#3AAFA9',
+                    size: 8
+                },
+                line: {
+                    color: '#2B4141',
+                    width: 2
+                },
+                name: 'Head Position'
+            };
+            
+            const layout = {
+                title: 'LOOK Disk Head Movement',
+                yaxis: {
+                    title: 'Step Number',
+                    autorange: 'reversed', 
+                    tickmode: 'linear',
+                    tick0: 0,
+                    dtick: 1
+                },
+                xaxis: {
+                    title: 'Disk Cylinder Position',
+                    autorange: true 
+                },
+                hovermode: 'closest',
+                margin: {
+                    l: 50,
+                    r: 20,
+                    b: 50,
+                    t: 50,
+                    pad: 4
+                }
+            };
+            
+            Plotly.newPlot('seekChart', [trace], layout);
+        }
+        
+        function setupDiskVisualization(seekSequence, maxCylinder) {
+            const visualizationContainer = document.getElementById('diskVisualization');
+            visualizationContainer.innerHTML = '';
+          
+            const diskHead = document.createElement('div');
+            diskHead.className = 'disk-head';
+            diskHead.id = 'diskHead';
+            diskHead.textContent = 'H';
+            visualizationContainer.appendChild(diskHead);
+            
+            const trackCount = 10;
+            for (let i = 0; i <= trackCount; i++) {
+                const position = Math.round((maxCylinder / trackCount) * i);
+                const track = document.createElement('div');
+                track.className = 'disk-track';
+                track.style.left = `${(position / maxCylinder) * 100}%`;
+                track.style.width = '1px';
+                track.setAttribute('data-position', position);
+               
+                const label = document.createElement('div');
+                label.className = 'cylinder-marker';
+                label.textContent = position;
+                label.style.position = 'absolute';
+                label.style.bottom = '-20px';
+                label.style.left = '50%';
+                label.style.transform = 'translateX(-50%)';
+                track.appendChild(label);
+                
+                visualizationContainer.appendChild(track);
+            }
+            
+            const initialPosition = seekSequence[0];
+            diskHead.style.left = `${(initialPosition / maxCylinder) * 100}%`;
+        }
+        
+        function updateSeekTable(seekSequence, distanceSequence, cumulativeDistance, initialCylinder) {
+            const tableBody = document.getElementById('seekTableBody');
+            tableBody.innerHTML = '';
+            
+            for (let i = 0; i < distanceSequence.length; i++) {
+                const row = document.createElement('tr');
+                row.setAttribute('data-step', i);
+                
+                const stepCell = document.createElement('td');
+                stepCell.innerHTML = `<div class="step-indicator">${i+1}</div>`;
+                
+                const fromCell = document.createElement('td');
+                fromCell.textContent = i === 0 ? initialCylinder : seekSequence[i-1];
+                
+                const toCell = document.createElement('td');
+                toCell.textContent = seekSequence[i];
+                
+                const distanceCell = document.createElement('td');
+                distanceCell.textContent = distanceSequence[i];
+                
+                const directionCell = document.createElement('td');
+                const fromPos = i === 0 ? initialCylinder : seekSequence[i-1];
+                const direction = seekSequence[i] > fromPos ? 'Increasing' : 'Decreasing';
+                directionCell.textContent = direction;
+                
+                const cumulativeCell = document.createElement('td');
+                cumulativeCell.textContent = cumulativeDistance[i+1];
+                
+                row.appendChild(stepCell);
+                row.appendChild(fromCell);
+                row.appendChild(toCell);
+                row.appendChild(distanceCell);
+                row.appendChild(directionCell);
+                row.appendChild(cumulativeCell);
+                
+                tableBody.appendChild(row);
+            }
+        }
+        
+        function createStepExplanation(seekSequence, distanceSequence, cumulativeDistance, initialCylinder, initialDirection) {
+            const explanationContainer = document.getElementById('stepExplanation');
+            
+            const headerElement = explanationContainer.querySelector('h3');
+            explanationContainer.innerHTML = '';
+            explanationContainer.appendChild(headerElement);
+            
+            const initialStep = document.createElement('div');
+            initialStep.className = 'step-card active';
+            initialStep.setAttribute('data-step', '0');
+            initialStep.innerHTML = `
+                <h4>Step 0: Initial Setup</h4>
+                <p>The disk head is initially positioned at cylinder ${initialCylinder}.</p>
+                <p>The LOOK algorithm will first sort all requests and then service them based on the initial direction (${initialDirection}).</p>
+                <p>For LOOK in the ${initialDirection} direction, the head will:</p>
+                <ul>
+                    <li>First service all cylinders in the ${initialDirection} direction from current position</li>
+                    <li>Then reverse direction and service all cylinders in the opposite direction</li>
+                </ul>
+            `;
+            explanationContainer.appendChild(initialStep);
+            
+            for (let i = 0; i < distanceSequence.length; i++) {
+                const fromPos = i === 0 ? initialCylinder : seekSequence[i-1];
+                const toPos = seekSequence[i];
+                const distance = distanceSequence[i];
+                const cumDistance = cumulativeDistance[i+1];
+                const direction = toPos > fromPos ? 'increasing' : 'decreasing';
+                
+                let explanationText = '';
+           
+                if (i > 0 && (seekSequence[i] < seekSequence[i-1] && initialDirection === 'increasing') || 
+                    (seekSequence[i] > seekSequence[i-1] && initialDirection === 'decreasing')) {
+                    explanationText = `
+                        <p>This is where the LOOK algorithm reverses direction! The head reached the last request in the ${initialDirection} direction and now changes direction.</p>
+                        <p>The head moves from cylinder ${fromPos} to cylinder ${toPos}, a distance of ${distance} cylinders.</p>
+                        <p>The total seek distance is now ${cumDistance} cylinders.</p>
+                    `;
+                } else {
+                    explanationText = `
+                        <p>The head moves from cylinder ${fromPos} to cylinder ${toPos}, a distance of ${distance} cylinders.</p>
+                        <p>Direction: ${direction}</p>
+                        <p>The total seek distance is now ${cumDistance} cylinders.</p>
+                    `;
+                }
+                
+                const stepCard = document.createElement('div');
+                stepCard.className = 'step-card';
+                stepCard.setAttribute('data-step', i+1);
+                stepCard.innerHTML = `
+                    <h4>Step ${i+1}: Service Request at Cylinder ${toPos}</h4>
+                    ${explanationText}
+                `;
+                explanationContainer.appendChild(stepCard);
+            }
+            
+            const finalStep = document.createElement('div');
+            finalStep.className = 'step-card';
+            finalStep.setAttribute('data-step', distanceSequence.length+1);
+            finalStep.innerHTML = `
+                <h4>Final Summary</h4>
+                <p>The LOOK disk scheduling algorithm has completed servicing all requests.</p>
+                <p>Total seek distance: ${cumulativeDistance[cumulativeDistance.length-1]} cylinders</p>
+                <p>Average seek distance: ${(cumulativeDistance[cumulativeDistance.length-1] / distanceSequence.length).toFixed(2)} cylinders per request</p>
+                <p>The LOOK algorithm is more efficient than SCAN because it doesn't travel to the disk boundaries when there are no requests there. It only goes as far as the last request in a direction before reversing.</p>
+            `;
+            explanationContainer.appendChild(finalStep);
+        }
+        
+        function startAnimation() {
+            isPlaying = true;
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            
+            clearInterval(animationInterval);
+            
+            const speed = 1000 / animationSpeed;
+            animationInterval = setInterval(nextStep, speed);
+        }
+        
+        function pauseAnimation() {
+            isPlaying = false;
+            clearInterval(animationInterval);
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+        
+        function resetAnimation() {
+           
+            currentStep = 0;
+            isPlaying = false;
+            
+            clearInterval(animationInterval);
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('progressBar').style.width = '0%';
+            
+            const diskHead = document.getElementById('diskHead');
+            if (diskHead && seekSequence.length > 0) {
+                diskHead.style.left = `${(seekSequence[0] / maxCylinder) * 100}%`;
+            }
+  
+            const rows = document.querySelectorAll('#seekTableBody tr');
+            rows.forEach(row => row.classList.remove('current'));
+
+            const stepCards = document.querySelectorAll('#stepExplanation .step-card');
+            stepCards.forEach(card => {
+                card.classList.remove('active');
+                if (card.getAttribute('data-step') === '0') {
+                    card.classList.add('active');
+                }
+            });
+        }
+        
+        function nextStep() {
+            if (currentStep >= seekSequence.length) {
+                pauseAnimation();
+                return;
+            }
+       
+            const diskHead = document.getElementById('diskHead');
+            if (diskHead) {
+                diskHead.style.left = `${(seekSequence[currentStep] / maxCylinder) * 100}%`;
+            }
+   
+            const rows = document.querySelectorAll('#seekTableBody tr');
+            rows.forEach(row => row.classList.remove('current'));
+            
+            if (currentStep > 0) {
+                const currentRow = document.querySelector(`#seekTableBody tr[data-step="${currentStep-1}"]`);
+                if (currentRow) {
+                    currentRow.classList.add('current');
+                }
+            }
+            
+            const stepCards = document.querySelectorAll('#stepExplanation .step-card');
+            stepCards.forEach(card => card.classList.remove('active'));
+            
+            const activeCard = document.querySelector(`#stepExplanation .step-card[data-step="${currentStep}"]`);
+            if (activeCard) {
+                activeCard.classList.add('active');
+                activeCard.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }
+            
+            const progressPercentage = ((currentStep) / seekSequence.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            
+            currentStep++;
+            
+            if (currentStep >= seekSequence.length) {
+           
+                const finalCard = document.querySelector(`#stepExplanation .step-card[data-step="${seekSequence.length}"]`);
+                if (finalCard) {
+                    stepCards.forEach(card => card.classList.remove('active'));
+                    finalCard.classList.add('active');
+                    finalCard.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                }
+                
+                pauseAnimation();
+            }
+        }
+    </script>
+</body>
+</html>
