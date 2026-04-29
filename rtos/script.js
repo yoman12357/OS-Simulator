@@ -27,6 +27,7 @@ class RTOSSimulator {
 		this.resetBtn = document.getElementById("reset-btn");
 		this.taskForm = document.getElementById("task-form");
 		this.simState = document.getElementById("sim-state");
+		this.memoryBlockElements = [];
 
 		this.initMemoryBlocks();
 		this.updateGanttTimeMarkers();
@@ -38,6 +39,7 @@ class RTOSSimulator {
 			const block = document.createElement("div");
 			block.className = "memory-block";
 			this.memoryBlocks.appendChild(block);
+			this.memoryBlockElements.push(block);
 		}
 	}
 
@@ -96,8 +98,10 @@ class RTOSSimulator {
 		this.updateUI();
 		this.updateSimState("IDLE");
 
-		document.querySelectorAll(".memory-block").forEach((block) => {
+		this.memoryBlockElements.forEach((block) => {
 			block.style.backgroundColor = "";
+			block.style.boxShadow = "none";
+			block.classList.remove("active");
 		});
 	}
 
@@ -185,6 +189,7 @@ class RTOSSimulator {
 			const li = document.createElement("li");
 			li.className = "task-item";
 			li.id = `task-${task.id}`;
+			const stateLabel = task.state.charAt(0).toUpperCase() + task.state.slice(1);
 
 			let stateText = `<span class="priority-pill priority-${task.priority}">${task.priority.toUpperCase()}</span>`;
 			if (task.state === "running") {
@@ -200,13 +205,23 @@ class RTOSSimulator {
 					${stateText}
 				</h3>
 				<p>
-					<span>Time: ${Math.max(task.remainingTime, 0)}/${task.burstTime} ms</span>
+					<span>Execution: ${Math.max(task.remainingTime, 0)} ms left out of ${task.burstTime} ms</span>
 					<span>Memory: ${task.memoryRequired} KB</span>
 				</p>
+				<div class="task-meta">
+					<span>Priority Level: ${task.priority.toUpperCase()}</span>
+					<span>Current State: ${stateLabel.toUpperCase()}</span>
+					<span>Task ID: T${task.id}</span>
+					<span>Started At: ${task.startTime === null ? "Not started" : `${task.startTime} ms`}</span>
+				</div>
 			`;
 
 			if (task.state === "completed") {
 				li.classList.add("task-completed");
+			}
+
+			if (task.state === "running") {
+				li.classList.add("is-running");
 			}
 
 			this.tasksList.appendChild(li);
@@ -245,8 +260,10 @@ class RTOSSimulator {
 		const taskBlock = document.createElement("div");
 		taskBlock.className = "gantt-task";
 
-		const color = coreIndex === 0 ? "#c00100" : "#2bb673";
-		taskBlock.style.backgroundColor = color;
+		const color = coreIndex === 0
+			? "linear-gradient(135deg, #18b9ff, #67f0cb)"
+			: "linear-gradient(135deg, #ff7a93, #ffbe63)";
+		taskBlock.style.background = color;
 
 		const left = (timeStart / this.timeScale) * 100;
 		const width = ((timeEnd - timeStart) / this.timeScale) * 100;
@@ -331,15 +348,8 @@ class RTOSSimulator {
 		if (!task) return;
 
 		const executionBlock = document.createElement("div");
-		executionBlock.className = "task-execution";
+		executionBlock.className = `task-execution priority-${task.priority}`;
 		executionBlock.style.width = "100%";
-
-		const colorMap = {
-			high: "#ef4444",
-			medium: "#f59e0b",
-			low: "#2bb673"
-		};
-		executionBlock.style.backgroundColor = colorMap[task.priority];
 		executionBlock.textContent = `${task.name} (${Math.max(task.remainingTime, 0)}ms)`;
 		core.appendChild(executionBlock);
 	}
@@ -355,16 +365,17 @@ class RTOSSimulator {
 	updateMemoryUI() {
 		const usagePercent = Math.round((this.usedMemory / this.totalMemory) * 100);
 		this.memoryUsage.textContent = `${this.usedMemory}/${this.totalMemory} KB (${usagePercent}%)`;
-		const blocks = document.querySelectorAll(".memory-block");
-		const blocksToFill = Math.floor((this.usedMemory / this.totalMemory) * blocks.length);
+		const blocksToFill = Math.floor((this.usedMemory / this.totalMemory) * this.memoryBlockElements.length);
 
-		blocks.forEach((block, index) => {
+		this.memoryBlockElements.forEach((block, index) => {
 			if (index < blocksToFill) {
-				block.style.backgroundColor = "#c00100";
-				block.style.boxShadow = "0 0 8px rgba(192, 1, 0, 0.35) inset";
+				block.style.backgroundColor = "rgba(89, 240, 194, 0.9)";
+				block.style.boxShadow = "0 0 14px rgba(89, 240, 194, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.2)";
+				block.classList.add("active");
 			} else {
 				block.style.backgroundColor = "";
 				block.style.boxShadow = "none";
+				block.classList.remove("active");
 			}
 		});
 	}
