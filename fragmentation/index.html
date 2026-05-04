@@ -1,1 +1,288 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+	<title>OS Simulator | Fragmentation</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400&display=swap" rel="stylesheet"/>
+	<link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+	<div class="page-shell">
+		<section class="top-ribbon">
+			<div class="ribbon-item">
+				<span class="ribbon-label">LAB MODE</span>
+				<strong>Interactive Memory Lab</strong>
+			</div>
+			<div class="ribbon-item">
+				<span class="ribbon-label">FOCUS</span>
+				<strong>Internal and External Fragmentation</strong>
+			</div>
+			<div class="ribbon-item">
+				<span class="ribbon-label">ACCESS</span>
+				<strong>Configure, Allocate, Inspect</strong>
+			</div>
+		</section>
+
+		<header class="hero-panel hero-panel-split">
+			<div class="hero-copy">
+				<a class="back-link" href="../index.html">
+					<span class="material-symbols-outlined">arrow_back</span>
+					Back to OS Simulator
+				</a>
+				<p class="eyebrow">Teacher Demo Build</p>
+				<h1>FRAGMENTATION STUDIO</h1>
+				<p class="hero-description">
+					Compare fixed and variable partition strategies. Allocate processes, track internal and external
+					fragmentation, and explore how compaction changes the free space map.
+				</p>
+				<div class="hero-tags">
+					<span class="hero-tag">Fixed Partitions</span>
+					<span class="hero-tag">Variable Partitions</span>
+					<span class="hero-tag">First Fit</span>
+					<span class="hero-tag">Best Fit</span>
+					<span class="hero-tag">Worst Fit</span>
+				</div>
+			</div>
+
+			<div class="hero-side">
+				<div class="hero-stats">
+					<div class="hero-stat hero-stat-live">
+						<span class="hero-stat-label">Status</span>
+						<div class="hero-stat-value">
+							<span class="status-dot"></span>
+							<span id="status-text" class="status-ok">READY</span>
+						</div>
+						<span class="hero-stat-meta">Memory ready</span>
+					</div>
+					<div class="hero-stat">
+						<span class="hero-stat-label">Processes</span>
+						<div class="hero-stat-value" id="proc-count">0</div>
+						<span class="hero-stat-meta">Allocated blocks</span>
+					</div>
+					<div class="hero-stat">
+						<span class="hero-stat-label">Mode</span>
+						<div class="hero-stat-value" id="mode-display">FIXED</div>
+						<span class="hero-stat-meta">Allocation scheme</span>
+					</div>
+				</div>
+
+				<div class="hero-brief">
+					<div class="section-kicker">Presentation Note</div>
+					<p>Switch modes to compare how internal and external fragmentation behave with the same workload.</p>
+				</div>
+			</div>
+		</header>
+
+		<main class="workspace-grid">
+			<aside class="control-column">
+				<section class="glass-panel accent-panel">
+					<div class="section-kicker">Memory Configuration</div>
+					<div class="info-stack">
+						<div class="field-row">
+							<label class="field-label" for="total-size">Total Memory (MB)</label>
+							<input class="field-input" id="total-size" min="16" placeholder="128" type="number" value="128"/>
+						</div>
+						<div class="field-row">
+							<label class="field-label" for="mode-select">Mode</label>
+							<select class="field-input" id="mode-select">
+								<option value="fixed">Fixed Partitions (internal)</option>
+								<option value="variable">Variable Partitions (external)</option>
+							</select>
+						</div>
+						<div class="field-row" id="partition-row">
+							<label class="field-label" for="partitions-input">Partition Sizes (MB)</label>
+							<input class="field-input" id="partitions-input" placeholder="16, 32, 24, 20, 36" type="text"/>
+						</div>
+						<div class="field-row">
+							<label class="field-label" for="policy-select">Allocation Policy</label>
+							<select class="field-input" id="policy-select">
+								<option value="first">First Fit</option>
+								<option value="best">Best Fit</option>
+								<option value="worst">Worst Fit</option>
+							</select>
+						</div>
+					</div>
+					<div class="action-list" style="margin-top:12px;">
+						<button class="action-button" id="apply-config" type="button">Apply Config</button>
+						<button class="action-button" id="load-sample" type="button">Load Sample</button>
+					</div>
+					<div class="tip-card tip-card-emphasis" style="margin-top:14px;">
+						<span class="tip-title">Mode Note</span>
+						<p id="mode-note">Fixed partitions show internal fragmentation. Variable partitions show external fragmentation and allow compaction.</p>
+					</div>
+				</section>
+
+				<section class="glass-panel">
+					<div class="section-kicker">Add Process</div>
+					<div class="info-stack">
+						<div class="field-row">
+							<label class="field-label" for="process-name">Process Name</label>
+							<input class="field-input" id="process-name" placeholder="P1" type="text"/>
+						</div>
+						<div class="field-row">
+							<label class="field-label" for="process-size">Process Size (MB)</label>
+							<input class="field-input" id="process-size" min="1" placeholder="12" type="number"/>
+						</div>
+					</div>
+					<div class="action-list" style="margin-top:12px;">
+						<button class="action-button" id="allocate-now" type="button">Allocate Now</button>
+						<button class="action-button" id="queue-request" type="button">Queue Request</button>
+					</div>
+				</section>
+
+				<section class="glass-panel">
+					<div class="section-kicker">Session Tools</div>
+					<div class="action-list">
+						<button class="action-button" id="allocate-queue" type="button">Allocate Queue</button>
+						<button class="action-button" id="compact-memory" type="button">Compact Memory</button>
+						<button class="action-button" id="reset-all" type="button">Reset</button>
+					</div>
+				</section>
+			</aside>
+
+			<section class="console-column">
+				<section class="overview-panel">
+					<div class="overview-card">
+						<span class="overview-label">Used Memory</span>
+						<strong id="used-mem">0 MB</strong>
+						<span class="overview-meta">Allocated to processes</span>
+					</div>
+					<div class="overview-card">
+						<span class="overview-label">Free Memory</span>
+						<strong id="free-mem">128 MB</strong>
+						<span class="overview-meta">Unallocated space</span>
+					</div>
+					<div class="overview-card">
+						<span class="overview-label">Internal Frag</span>
+						<strong id="internal-frag">0 MB</strong>
+						<span class="overview-meta">Unused inside partitions</span>
+					</div>
+					<div class="overview-card">
+						<span class="overview-label">External Frag</span>
+						<strong id="external-frag">0 MB</strong>
+						<span class="overview-meta">Free space in holes</span>
+					</div>
+				</section>
+
+				<section class="glass-panel memory-panel">
+					<div class="panel-header">
+						<div>
+							<div class="section-kicker">Visualization</div>
+							<h2>Memory Map</h2>
+						</div>
+						<span class="panel-badge" id="map-badge">No allocations yet</span>
+					</div>
+					<div class="panel-content">
+						<div class="memory-map" id="memory-map"></div>
+						<div class="mem-legend">
+							<div class="mem-legend-item">
+								<div class="legend-box mem-used"></div>
+								<span>Used</span>
+							</div>
+							<div class="mem-legend-item">
+								<div class="legend-box mem-free"></div>
+								<span>Free</span>
+							</div>
+							<div class="mem-legend-item">
+								<div class="legend-box mem-internal"></div>
+								<span>Internal</span>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section class="glass-panel console-panel">
+					<div class="panel-header">
+						<div>
+							<div class="section-kicker">Execution Console</div>
+							<h2>Event Log</h2>
+						</div>
+						<span class="panel-badge">Live log</span>
+					</div>
+					<div class="console-toolbar">
+						<span class="console-toolbar-chip">Allocation traces</span>
+						<span class="console-toolbar-chip">Fragmentation metrics</span>
+						<span class="console-toolbar-chip">Compaction updates</span>
+					</div>
+					<div class="console-output" id="console-output">
+						<div class="console-line line-info">$ FRAGMENTATION_LAB initialized</div>
+						<div class="console-line line-info">$ Configure memory and allocate processes...</div>
+					</div>
+				</section>
+			</section>
+
+			<aside class="insight-column">
+				<section class="glass-panel panel">
+					<div class="panel-header">
+						<div>
+							<div class="section-kicker">Process Table</div>
+							<h2>Active Processes</h2>
+						</div>
+						<span class="panel-badge" id="proc-badge">0 processes</span>
+					</div>
+					<div class="panel-content">
+						<div class="proc-table-wrap">
+							<table class="proc-table" id="proc-table">
+								<thead>
+									<tr>
+										<th>Name</th>
+										<th>Size</th>
+										<th>Location</th>
+										<th>Frag</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody id="proc-table-body">
+									<tr><td colspan="5" class="table-empty">No processes allocated</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</section>
+
+				<section class="glass-panel panel">
+					<div class="panel-header">
+						<div>
+							<div class="section-kicker">Free Space</div>
+							<h2>Free List</h2>
+						</div>
+						<span class="panel-badge" id="free-badge">0 blocks</span>
+					</div>
+					<div class="panel-content">
+						<div class="free-list" id="free-list"></div>
+					</div>
+				</section>
+
+				<section class="glass-panel panel">
+					<div class="panel-header">
+						<div>
+							<div class="section-kicker">Pending</div>
+							<h2>Request Queue</h2>
+						</div>
+						<span class="panel-badge" id="queue-badge">0 queued</span>
+					</div>
+					<div class="panel-content">
+						<div class="queue-list" id="queue-list"></div>
+					</div>
+				</section>
+			</aside>
+		</main>
+
+		<footer class="footer-bar">
+			<div class="footer-left">
+				<span>Build v4.0 simulator</span>
+				<span>2026 OS Emulator</span>
+			</div>
+			<div class="footer-right">
+				<a onclick="showReference()">Reference</a>
+				<span id="exec-count">Allocations: 0</span>
+			</div>
+		</footer>
+	</div>
+
+	<script src="script.js"></script>
+</body>
+</html>
 
