@@ -31,11 +31,11 @@
 				<p class="eyebrow">Real-time operating system simulator</p>
 				<h1>RTOS Task Scheduling Dashboard</h1>
 				<p class="hero-text">
-					This simulation shows how a real-time operating system assigns tasks to two CPU cores
+					This simulation shows how a real-time operating system assigns tasks to four CPU cores
 					using preemptive priority scheduling while also tracking memory usage.
 				</p>
 				<div class="hero-badges">
-					<span>2 CPU Cores</span>
+					<span>4 CPU Cores</span>
 					<span>Preemptive Priority Scheduling</span>
 					<span>4096 KB Shared Memory</span>
 				</div>
@@ -91,7 +91,7 @@
 						</div>
 						<div class="guide-step">
 							<strong>4</strong>
-							<p>The timeline records when each task used Core 1 or Core 2.</p>
+							<p>The timeline records when each task used any of the four available CPU cores.</p>
 						</div>
 					</div>
 				</article>
@@ -154,7 +154,7 @@
 					<article class="panel metric-card">
 						<p>CPU Load</p>
 						<strong id="cpu-util">0%</strong>
-						<span class="metric-note">How much of the two-core CPU capacity is currently busy.</span>
+						<span class="metric-note">How much of the four-core CPU capacity is currently busy.</span>
 					</article>
 					<article class="panel metric-card">
 						<p>Memory Footprint</p>
@@ -180,31 +180,48 @@
 							<h2>System Time</h2>
 						</div>
 						<div class="runtime-readout">
-							<span>Tick</span>
+							<span>Scheduler Tick</span>
 							<strong><span id="system-time">0</span> ms</strong>
 						</div>
 					</div>
-					<p class="runtime-explainer">Time increases in scheduler ticks. At each tick, the RTOS checks which tasks should run next.</p>
+					<div class="runtime-overview">
+						<p class="runtime-explainer">Time advances in scheduler ticks. On every tick, the RTOS reevaluates priority, assigns ready tasks to the available cores, and updates execution history.</p>
+						<div class="runtime-tags">
+							<span class="runtime-tag">Tick-driven dispatch</span>
+							<span class="runtime-tag">Preemptive checks</span>
+							<span class="runtime-tag">Live task updates</span>
+						</div>
+					</div>
 					<div class="signal-line">
 						<div class="signal-wave"></div>
+						<div class="signal-caption">
+							<span>Scheduler pulse</span>
+							<strong>Ready queue scan in progress</strong>
+						</div>
 					</div>
 				</article>
 
 				<div class="execution-grid">
 					<article class="panel cores-panel">
 						<div class="section-top compact">
-							<div>
-								<p class="eyebrow">Processor activity</p>
-								<h2>CPU Core Execution</h2>
-							</div>
-							<p class="supporting-copy">Shows which task is currently running on each of the two cores.</p>
+						<div>
+							<p class="eyebrow">Processor activity</p>
+							<h2>CPU Core Execution</h2>
 						</div>
+						<p class="supporting-copy">Shows which task is currently running on each of the four cores.</p>
+					</div>
 						<div class="core-stack">
 							<div id="core-1" class="cpu-core">
 								<span class="cpu-label">Core 1</span>
 							</div>
 							<div id="core-2" class="cpu-core">
 								<span class="cpu-label">Core 2</span>
+							</div>
+							<div id="core-3" class="cpu-core">
+								<span class="cpu-label">Core 3</span>
+							</div>
+							<div id="core-4" class="cpu-core">
+								<span class="cpu-label">Core 4</span>
 							</div>
 						</div>
 						<div class="legend-row">

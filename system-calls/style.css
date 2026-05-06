@@ -759,10 +759,30 @@ code,
 
 .proc-name {
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
     line-height: 1.25;
     overflow-wrap: anywhere;
     word-break: normal;
     min-width: 0;
+}
+
+.proc-current-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(103, 168, 255, 0.2);
+    background: rgba(77, 163, 255, 0.12);
+    color: var(--accent-strong);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
 }
 
 .proc-mem {

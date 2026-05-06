@@ -1,12 +1,13 @@
 class RTOSSimulator {
 	constructor() {
+		this.coreCount = 4;
 		this.systemTime = 0;
 		this.running = false;
 		this.taskIdCounter = 1;
 		this.totalMemory = 4096;
 		this.usedMemory = 0;
 		this.tasks = [];
-		this.runningTasks = [null, null];
+		this.runningTasks = Array(this.coreCount).fill(null);
 		this.taskHistory = [];
 		this.timeScale = 5000;
 
@@ -19,8 +20,9 @@ class RTOSSimulator {
 		this.memoryBlocks = document.getElementById("memory-blocks");
 		this.ganttContainer = document.getElementById("gantt-container");
 		this.ganttTimeMarkers = document.getElementById("gantt-time-markers");
-		this.core1 = document.getElementById("core-1");
-		this.core2 = document.getElementById("core-2");
+		this.coreElements = Array.from({ length: this.coreCount }, (_, index) =>
+			document.getElementById(`core-${index + 1}`)
+		);
 
 		this.startBtn = document.getElementById("start-btn");
 		this.pauseBtn = document.getElementById("pause-btn");
@@ -86,7 +88,7 @@ class RTOSSimulator {
 		this.systemTime = 0;
 		this.taskIdCounter = 1;
 		this.tasks = [];
-		this.runningTasks = [null, null];
+		this.runningTasks = Array(this.coreCount).fill(null);
 		this.taskHistory = [];
 		this.usedMemory = 0;
 		this.timeScale = 5000;
@@ -260,9 +262,13 @@ class RTOSSimulator {
 		const taskBlock = document.createElement("div");
 		taskBlock.className = "gantt-task";
 
-		const color = coreIndex === 0
-			? "linear-gradient(135deg, #18b9ff, #67f0cb)"
-			: "linear-gradient(135deg, #ff7a93, #ffbe63)";
+		const coreColors = [
+			"linear-gradient(135deg, #59b8ff, #8ee3ff)",
+			"linear-gradient(135deg, #ff7891, #ff9a7d)",
+			"linear-gradient(135deg, #8a8dff, #b4b6ff)",
+			"linear-gradient(135deg, #dcb363, #f5d88f)"
+		];
+		const color = coreColors[coreIndex] || coreColors[0];
 		taskBlock.style.background = color;
 
 		const left = (timeStart / this.timeScale) * 100;
@@ -292,7 +298,10 @@ class RTOSSimulator {
 				return a.id - b.id;
 			});
 
-		const desiredAssignments = [readyTasks[0] || null, readyTasks[1] || null];
+		const desiredAssignments = Array.from(
+			{ length: this.coreCount },
+			(_, index) => readyTasks[index] || null
+		);
 
 		for (let i = 0; i < this.runningTasks.length; i += 1) {
 			const currentTask = this.runningTasks[i];
@@ -340,7 +349,9 @@ class RTOSSimulator {
 	}
 
 	updateCoreUI(coreIndex, task) {
-		const core = coreIndex === 0 ? this.core1 : this.core2;
+		const core = this.coreElements[coreIndex];
+		if (!core) return;
+
 		while (core.children.length > 1) {
 			core.removeChild(core.lastChild);
 		}
@@ -355,7 +366,8 @@ class RTOSSimulator {
 	}
 
 	clearCores() {
-		[this.core1, this.core2].forEach((core) => {
+		this.coreElements.forEach((core) => {
+			if (!core) return;
 			while (core.children.length > 1) {
 				core.removeChild(core.lastChild);
 			}

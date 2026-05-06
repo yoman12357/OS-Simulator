@@ -1,15 +1,25 @@
 const systemState = {
     processes: [
-        { pid: 1, name: 'init', state: 'RUNNING', memory: 2.5 },
-        { pid: 2840, name: 'ROOT_DAEMON', state: 'RUNNING', memory: 15.3 }
+        { pid: 1, name: 'init', state: 'RUNNING', memory: 2.5, baseMemory: 2.5, parentPid: 0 },
+        { pid: 2840, name: 'ROOT_DAEMON', state: 'RUNNING', memory: 15.3, baseMemory: 15.3, parentPid: 1 }
     ],
-    memory: { total: 128, allocated: 35, free: 93 },
+    memory: { total: 128, allocated: 17.8, free: 110.2 },
     currentPid: 2840,
     nextPid: 2841,
     executionCount: 0,
     history: [],
     allocations: []
 };
+
+function recalculateMemoryState() {
+    const allocated = systemState.processes.reduce((sum, process) => sum + process.memory, 0);
+    systemState.memory.allocated = +allocated.toFixed(1);
+    systemState.memory.free = +(systemState.memory.total - systemState.memory.allocated).toFixed(1);
+}
+
+function getProcessAllocations(pid) {
+    return systemState.allocations.filter(allocation => allocation.pid === pid);
+}
 
 function getCurrentProcess() {
     let current = systemState.processes.find(process => process.pid === systemState.currentPid);
@@ -34,7 +44,8 @@ function formatProcessName(value, fallback = 'program') {
 function updateCurrentProcessMemory(delta) {
     const current = getCurrentProcess();
     if (current) {
-        current.memory = Math.max(0, +(current.memory + delta).toFixed(1));
+        const minimumMemory = current.baseMemory ?? 0;
+        current.memory = Math.max(minimumMemory, +(current.memory + delta).toFixed(1));
     }
 }
 
@@ -47,9 +58,8 @@ function updateMemoryUsage(delta, label) {
         return { ok: false, msg: label + ': insufficient memory' };
     }
 
-    systemState.memory.allocated = nextAllocated;
-    systemState.memory.free = systemState.memory.total - nextAllocated;
     updateCurrentProcessMemory(delta);
+    recalculateMemoryState();
     return { ok: true };
 }
 
@@ -58,10 +68,12 @@ function removeProcess(pid) {
     if (index === -1) return null;
 
     const removed = systemState.processes.splice(index, 1)[0];
+    systemState.allocations = systemState.allocations.filter(allocation => allocation.pid !== pid);
     if (systemState.currentPid === pid) {
         const replacement = systemState.processes.find(process => process.state === 'RUNNING') || systemState.processes[0] || null;
         systemState.currentPid = replacement ? replacement.pid : pid;
     }
+    recalculateMemoryState();
     return removed;
 }
 
@@ -87,16 +99,22 @@ const syscalls = {
             const parent = getCurrentProcess();
             const childPid = systemState.nextPid++;
             const childName = formatProcessName(a, 'child');
+            const childMemory = parent ? Math.max(1, +(parent.memory * 0.5).toFixed(1)) : 1;
+            if (systemState.memory.allocated + childMemory > systemState.memory.total) {
+                return { ok: false, msg: 'fork: insufficient memory for child process' };
+            }
             const child = {
                 pid: childPid,
                 name: childName,
                 state: 'RUNNING',
-                memory: parent ? Math.max(1, +(parent.memory * 0.5).toFixed(1)) : 1,
+                memory: childMemory,
+                baseMemory: childMemory,
                 parentPid: parent ? parent.pid : 0
             };
 
             systemState.processes.push(child);
             systemState.currentPid = childPid;
+            recalculateMemoryState();
             return { ok: true, msg: 'Forked child process ' + childPid + ' from parent ' + (parent ? parent.pid : '?') };
         }
     },
@@ -125,13 +143,18 @@ const syscalls = {
             const targetPid = parseNumber(a, -1);
 
             if (targetPid > 0) {
-                const target = systemState.processes.find(process => process.pid === targetPid && process.pid !== (current ? current.pid : -1));
+                const target = systemState.processes.find(process =>
+                    process.pid === targetPid &&
+                    process.parentPid === (current ? current.pid : -1)
+                );
                 if (!target) return { ok: false, msg: 'wait: child process ' + targetPid + ' not found' };
                 removeProcess(targetPid);
                 return { ok: true, msg: 'Reaped child process ' + targetPid };
             }
 
-            const child = [...systemState.processes].reverse().find(process => process.pid !== (current ? current.pid : -1) && process.pid !== 1);
+            const child = [...systemState.processes].reverse().find(process =>
+                process.parentPid === (current ? current.pid : -1)
+            );
             if (!child) return { ok: false, msg: 'wait: no child processes available' };
             removeProcess(child.pid);
             return { ok: true, msg: 'Reaped child process ' + child.pid };
@@ -238,7 +261,7 @@ const syscalls = {
             const result = updateMemoryUsage(size, 'malloc');
             if (!result.ok) return result;
             const address = '0x' + Math.random().toString(16).slice(2, 8).toUpperCase();
-            systemState.allocations.push({ type: 'malloc', size, address });
+            systemState.allocations.push({ pid: systemState.currentPid, type: 'malloc', size, address });
             return { ok: true, msg: 'Allocated ' + size + 'MB at ' + address };
         }
     },
@@ -255,7 +278,7 @@ const syscalls = {
             const result = updateMemoryUsage(amount, 'calloc');
             if (!result.ok) return result;
             const address = '0x' + Math.random().toString(16).slice(2, 8).toUpperCase();
-            systemState.allocations.push({ type: 'calloc', size: amount, address });
+            systemState.allocations.push({ pid: systemState.currentPid, type: 'calloc', size: amount, address });
             return { ok: true, msg: 'Allocated ' + amount + 'MB with calloc at ' + address };
         }
     },
@@ -265,11 +288,41 @@ const syscalls = {
         syntax: 'free <size|all>',
         example: 'free 16',
         run: (a) => {
+            const current = getCurrentProcess();
+            if (!current) return { ok: false, msg: 'free: no active process' };
+
             const input = a.trim().toLowerCase();
-            const amount = input === 'all' ? systemState.memory.allocated : Math.max(1, parseNumber(input, 10));
+            const processAllocations = getProcessAllocations(current.pid);
+            const maxFreeable = +processAllocations.reduce((sum, allocation) => sum + allocation.size, 0).toFixed(1);
+            const amount = input === 'all' ? maxFreeable : Math.max(1, parseNumber(input, 10));
+
+            if (maxFreeable <= 0) {
+                return { ok: false, msg: 'free: no heap allocations available for current process' };
+            }
+
+            if (amount > maxFreeable) {
+                return { ok: false, msg: 'free: requested size exceeds current process allocations' };
+            }
+
             const result = updateMemoryUsage(-amount, 'free');
             if (!result.ok) return result;
-            systemState.allocations = systemState.allocations.slice(0, Math.max(0, systemState.allocations.length - 1));
+
+            let remaining = amount;
+            systemState.allocations = systemState.allocations.flatMap(allocation => {
+                if (allocation.pid !== current.pid || remaining <= 0) {
+                    return [allocation];
+                }
+
+                if (allocation.size <= remaining) {
+                    remaining = +(remaining - allocation.size).toFixed(1);
+                    return [];
+                }
+
+                const resizedAllocation = { ...allocation, size: +(allocation.size - remaining).toFixed(1) };
+                remaining = 0;
+                return [resizedAllocation];
+            });
+
             return { ok: true, msg: 'Freed ' + amount + 'MB' };
         }
     },
@@ -284,7 +337,7 @@ const syscalls = {
             const result = updateMemoryUsage(mb, 'mmap');
             if (!result.ok) return result;
             const address = '0x' + Math.random().toString(16).slice(2, 8).toUpperCase();
-            systemState.allocations.push({ type: 'mmap', size: mb, address });
+            systemState.allocations.push({ pid: systemState.currentPid, type: 'mmap', size: mb, address });
             return { ok: true, msg: 'Mapped ' + length + ' bytes at ' + address };
         }
     },
@@ -296,8 +349,35 @@ const syscalls = {
         run: (a) => {
             const length = Math.max(1, parseNumber(a, 4096));
             const mb = Math.max(1, Math.ceil(length / 1024));
+            const current = getCurrentProcess();
+            if (!current) return { ok: false, msg: 'munmap: no active process' };
+
+            const mappedTotal = getProcessAllocations(current.pid)
+                .filter(allocation => allocation.type === 'mmap')
+                .reduce((sum, allocation) => sum + allocation.size, 0);
+            if (mb > mappedTotal) {
+                return { ok: false, msg: 'munmap: requested size exceeds the mapped memory of the current process' };
+            }
+
             const result = updateMemoryUsage(-mb, 'munmap');
             if (!result.ok) return result;
+
+            let remaining = mb;
+            systemState.allocations = systemState.allocations.flatMap(allocation => {
+                if (allocation.pid !== current.pid || allocation.type !== 'mmap' || remaining <= 0) {
+                    return [allocation];
+                }
+
+                if (allocation.size <= remaining) {
+                    remaining = +(remaining - allocation.size).toFixed(1);
+                    return [];
+                }
+
+                const resizedAllocation = { ...allocation, size: +(allocation.size - remaining).toFixed(1) };
+                remaining = 0;
+                return [resizedAllocation];
+            });
+
             return { ok: true, msg: 'Unmapped ' + length + ' bytes' };
         }
     },
@@ -400,6 +480,7 @@ const syscalls = {
     }
 };
 document.addEventListener('DOMContentLoaded', () => {
+    recalculateMemoryState();
     setupInput();
     renderMemory();
     renderProcesses();
@@ -509,7 +590,9 @@ function renderProcesses() {
     systemState.processes.slice(0, 6).forEach(process => {
         const item = document.createElement('div');
         item.className = 'process-item';
-        const currentMarker = process.pid === systemState.currentPid ? ' [CURRENT]' : '';
+        const currentMarker = process.pid === systemState.currentPid
+            ? '<span class="proc-current-badge">CURRENT</span>'
+            : '';
         item.innerHTML = '<div class="proc-pid">' + process.pid + '</div>' +
             '<div class="proc-name">' + process.name + currentMarker + '</div>' +
             '<div class="proc-mem">' + process.memory.toFixed(1) + 'MB</div>' +
@@ -613,15 +696,16 @@ function clearHistory() {
 
 function resetKernel() {
     systemState.processes = [
-        { pid: 1, name: 'init', state: 'RUNNING', memory: 2.5 },
-        { pid: 2840, name: 'ROOT_DAEMON', state: 'RUNNING', memory: 15.3 }
+        { pid: 1, name: 'init', state: 'RUNNING', memory: 2.5, baseMemory: 2.5, parentPid: 0 },
+        { pid: 2840, name: 'ROOT_DAEMON', state: 'RUNNING', memory: 15.3, baseMemory: 15.3, parentPid: 1 }
     ];
-    systemState.memory = { total: 128, allocated: 35, free: 93 };
+    systemState.memory = { total: 128, allocated: 17.8, free: 110.2 };
     systemState.currentPid = 2840;
     systemState.nextPid = 2841;
     systemState.executionCount = 0;
     systemState.history = [];
     systemState.allocations = [];
+    recalculateMemoryState();
     document.getElementById('console-output').innerHTML = '';
     addLog('$ System reinitialized', 'info');
     renderMemory();
