@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Allocation Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="strip" aria-label="Project summary">
+      <div class="bar">
+        <p class="eyebrow">Lab Mode</p>
+        <h2>Interactive File Allocation Studio</h2>
+      </div>
+    </section>
+
+    <section class="studio">
+      <header class="hero">
+        <a class="back" href="#" aria-label="Back to OS simulator">← Back to OS Simulator</a>
+        <p class="eyebrow">Teacher Demo Build</p>
+        <h1>File Allocation Studio</h1>
+        <p class="lede">
+          Simulate Sequential, Linked, Indexed, and Multi-level Indexed file allocation methods.
+          Define disk blocks, set file sizes, then watch how blocks are allocated and visualized on the disk map.
+        </p>
+        <div class="chips" id="chipList"></div>
+      </header>
+
+      <section class="dashboard">
+        <aside class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Control Deck</p>
+              <h3>Allocation Setup</h3>
+            </div>
+            <span class="pill" id="blockCount">0 blocks</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <label>
+                Total disk blocks
+                <input id="totalBlocks" type="number" min="8" max="128" value="32">
+              </label>
+
+              <label>
+                File name
+                <input id="fileName" type="text" placeholder="e.g. document.txt" value="myfile.txt">
+              </label>
+
+              <div class="two">
+                <label>
+                  File size (blocks)
+                  <input id="fileSize" type="number" min="1" value="6">
+                </label>
+                <label>
+                  Start block
+                  <input id="startBlock" type="number" min="0" value="2" placeholder="For sequential">
+                </label>
+              </div>
+
+              <label class="conditional visible" id="linkedField">
+                Linked block chain (comma-separated)
+                <input id="linkedBlocks" value="2, 7, 12, 18, 24, 29" inputmode="numeric" placeholder="e.g. 2, 7, 12, 18">
+              </label>
+
+              <label class="conditional" id="indexBlockField">
+                Index block number
+                <input id="indexBlock" type="number" min="0" value="5" placeholder="Block holding index">
+              </label>
+
+              <label class="conditional" id="indexedDataField">
+                Data block addresses (comma-separated)
+                <input id="indexedBlocks" value="8, 13, 17, 22, 27, 31" inputmode="numeric" placeholder="e.g. 8, 13, 17, 22">
+              </label>
+
+              <!-- Multi-level Indexed fields -->
+              <label class="conditional" id="l1IndexField">
+                Level-1 index block
+                <input id="l1IndexBlock" type="number" min="0" value="3">
+              </label>
+              <label class="conditional" id="l2IndexField">
+                Level-2 index blocks (comma-separated)
+                <input id="l2IndexBlocks" value="6, 10" inputmode="numeric">
+              </label>
+              <label class="conditional" id="mlDataField">
+                Data blocks (comma-separated)
+                <input id="mlDataBlocks" value="14, 18, 21, 25, 28, 31" inputmode="numeric">
+              </label>
+
+              <div>
+                <p class="eyebrow">Allocation Method</p>
+                <div class="algorithms" id="algoButtons"></div>
+              </div>
+
+              <div class="actions">
+                <button class="btn primary" id="run">Allocate File</button>
+                <button class="btn ghost" id="sample">Load Sample</button>
+              </div>
+              <div class="actions">
+                <button class="btn" id="addFile">Add Another File</button>
+                <button class="btn ghost" id="reset">Reset All</button>
+              </div>
+              <div class="error" id="error"></div>
+              <p class="note">
+                Sequential: contiguous blocks. Linked: chain via pointers. Indexed: index block holds addresses. Multi-level Indexed: hierarchical index blocks for large files.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <section>
+          <div class="stats">
+            <article class="stat">
+              <p class="eyebrow">Status</p>
+              <strong id="status">IDLE</strong>
+              <span>Allocator ready</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Method</p>
+              <strong id="activeAlgo">Sequential</strong>
+              <span>Active mode</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Blocks Used</p>
+              <strong id="blocksUsed">—</strong>
+              <span>Data blocks</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Overhead</p>
+              <strong id="overhead">—</strong>
+              <span>Index/pointer blocks</span>
+            </article>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Visualization</p>
+                <h3>Disk Block Map</h3>
+              </div>
+              <span class="pill" id="runBadge">No allocation yet</span>
+            </div>
+            <div class="panel-body">
+              <div class="disk-map-wrap">
+                <div class="disk-map" id="diskMap"></div>
+                <div class="legend" id="legend"></div>
+              </div>
+              <div class="panel structure-panel">
+                <div class="panel-head">
+                  <div>
+                    <p class="eyebrow">Data Structure</p>
+                    <h3 id="structTitle">Allocation Table</h3>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div id="structViz"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel console-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Execution Console</p>
+            <h3>Allocator Trace</h3>
+          </div>
+          <span class="pill">Live log</span>
+        </div>
+        <div class="trace" id="trace">$ FILE_ALLOCATOR initialized
+$ Configure a file and select an allocation method...</div>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
