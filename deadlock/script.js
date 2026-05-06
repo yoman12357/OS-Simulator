@@ -441,44 +441,70 @@ function runBanker() {
 }
 
 function loadRagSample() {
-    document.getElementById('rag-process-count').value = 3;
-    document.getElementById('rag-resource-count').value = 3;
+    document.getElementById('rag-process-count').value = 5;
+    document.getElementById('rag-resource-count').value = 5;
     createRagModel();
-    graphModels.rag.allocations = [{ p: 0, r: 0 }, { p: 1, r: 1 }, { p: 2, r: 2 }];
-    graphModels.rag.requests = [{ p: 0, r: 1 }, { p: 1, r: 2 }, { p: 2, r: 0 }];
+    graphModels.rag.allocations = [
+        { p: 0, r: 1 },
+        { p: 1, r: 0 },
+        { p: 4, r: 2 },
+        { p: 2, r: 3 },
+        { p: 3, r: 4 }
+    ];
+    graphModels.rag.requests = [
+        { p: 0, r: 0 },
+        { p: 1, r: 2 },
+        { p: 1, r: 3 },
+        { p: 1, r: 4 },
+        { p: 2, r: 4 },
+        { p: 3, r: 1 }
+    ];
     updateGraphOutput('rag');
     analyzeRag();
 }
 
 function loadWfgSample() {
-    document.getElementById('wfg-process-count').value = 3;
-    document.getElementById('wfg-resource-count').value = 3;
+    document.getElementById('wfg-process-count').value = 5;
+    document.getElementById('wfg-resource-count').value = 5;
     createWfgModel();
-    graphModels.wfg.allocations = [{ p: 0, r: 0 }, { p: 1, r: 1 }, { p: 2, r: 2 }];
-    graphModels.wfg.requests = [{ p: 0, r: 1 }, { p: 1, r: 2 }, { p: 2, r: 0 }];
+    graphModels.wfg.allocations = [
+        { p: 0, r: 1 },
+        { p: 1, r: 0 },
+        { p: 4, r: 2 },
+        { p: 2, r: 3 },
+        { p: 3, r: 4 }
+    ];
+    graphModels.wfg.requests = [
+        { p: 0, r: 0 },
+        { p: 1, r: 2 },
+        { p: 1, r: 3 },
+        { p: 1, r: 4 },
+        { p: 2, r: 4 },
+        { p: 3, r: 1 }
+    ];
     updateGraphOutput('wfg');
     analyzeWfg();
 }
 
 function loadBankerSample() {
     document.getElementById('banker-process-count').value = 5;
-    document.getElementById('banker-resource-count').value = 3;
+    document.getElementById('banker-resource-count').value = 4;
     createBankerModel();
     banker.allocation = [
-        [0, 1, 0],
-        [2, 0, 0],
-        [3, 0, 2],
-        [2, 1, 1],
-        [0, 0, 2]
+        [3, 0, 1, 4],
+        [2, 2, 1, 0],
+        [3, 1, 2, 1],
+        [0, 5, 1, 0],
+        [4, 2, 1, 2]
     ];
     banker.max = [
-        [7, 5, 3],
-        [3, 2, 2],
-        [9, 0, 2],
-        [2, 2, 2],
-        [4, 3, 3]
+        [5, 1, 1, 7],
+        [3, 2, 1, 1],
+        [3, 3, 2, 1],
+        [4, 6, 1, 2],
+        [6, 3, 2, 5]
     ];
-    banker.available = [3, 3, 2];
+    banker.available = [0, 3, 0, 1];
     renderBankerMatrices();
     runBanker();
 }
