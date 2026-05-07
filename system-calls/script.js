@@ -6,10 +6,90 @@ const systemState = {
     memory: { total: 128, allocated: 17.8, free: 110.2 },
     currentPid: 2840,
     nextPid: 2841,
+    nextFd: 3,
     executionCount: 0,
     history: [],
-    allocations: []
+    allocations: [],
+    openFiles: {},
+    files: {}
 };
+
+const FILE_STORAGE_KEY = 'os-simulator-system-calls-files';
+const DEFAULT_FILES = {
+    'notes.txt': {
+        content: 'Kernel notes:\\n- System calls bridge user mode and kernel mode.\\n- Use open, read, write, and close to access files.',
+        createdBy: 'kernel'
+    },
+    'log.txt': {
+        content: 'Boot log initialized.\\n',
+        createdBy: 'kernel'
+    }
+};
+
+function cloneDefaultFiles() {
+    return JSON.parse(JSON.stringify(DEFAULT_FILES));
+}
+
+function loadFiles() {
+    try {
+        const stored = window.localStorage.getItem(FILE_STORAGE_KEY);
+        if (!stored) return cloneDefaultFiles();
+        const parsed = JSON.parse(stored);
+        return parsed && typeof parsed === 'object' ? parsed : cloneDefaultFiles();
+    } catch {
+        return cloneDefaultFiles();
+    }
+}
+
+function saveFiles() {
+    try {
+        window.localStorage.setItem(FILE_STORAGE_KEY, JSON.stringify(systemState.files));
+    } catch {
+        // Ignore storage failures and continue with in-memory state.
+    }
+}
+
+function normalizeFlags(flagsText) {
+    return (flagsText || 'O_RDONLY')
+        .split('|')
+        .map(flag => flag.trim().toUpperCase())
+        .filter(Boolean);
+}
+
+function parseOpenArguments(input) {
+    const [pathText, ...flagParts] = input.trim().split(/\s+/);
+    return {
+        path: pathText || 'notes.txt',
+        flags: normalizeFlags(flagParts.join(' ') || 'O_RDONLY')
+    };
+}
+
+function canRead(flags) {
+    return flags.includes('O_RDONLY') || flags.includes('O_RDWR');
+}
+
+function canWrite(flags) {
+    return flags.includes('O_WRONLY') || flags.includes('O_RDWR') || flags.includes('O_APPEND');
+}
+
+function getOpenFile(fd) {
+    return systemState.openFiles[fd] || null;
+}
+
+function createFileIfMissing(path) {
+    if (!systemState.files[path]) {
+        systemState.files[path] = {
+            content: '',
+            createdBy: getCurrentProcess() ? getCurrentProcess().pid : 'kernel'
+        };
+        saveFiles();
+    }
+}
+
+function formatFilePreview(content) {
+    if (!content) return '[empty file]';
+    return content.replace(/\n/g, '\\n');
+}
 
 function recalculateMemoryState() {
     const allocated = systemState.processes.reduce((sum, process) => sum + process.memory, 0);
@@ -210,8 +290,31 @@ const syscalls = {
         syntax: 'open <path> <flags>',
         example: 'open test.txt O_RDWR',
         run: (a) => {
-            const args = a.trim() || 'file.txt O_RDONLY';
-            return { ok: true, msg: 'File opened: ' + args + ' [FD: 3]' };
+            const { path, flags } = parseOpenArguments(a);
+            const writable = canWrite(flags);
+            const readable = canRead(flags);
+
+            if (!systemState.files[path] && (flags.includes('O_CREAT') || writable)) {
+                createFileIfMissing(path);
+            }
+
+            const file = systemState.files[path];
+            if (!file) {
+                return { ok: false, msg: 'open: file not found: ' + path };
+            }
+
+            const fd = systemState.nextFd++;
+            systemState.openFiles[fd] = {
+                path,
+                flags,
+                position: flags.includes('O_APPEND') ? file.content.length : 0
+            };
+
+            return {
+                ok: true,
+                msg: 'File opened: ' + path + ' [' + flags.join('|') + '] [FD: ' + fd + '] ' +
+                    '(read=' + (readable ? 'yes' : 'no') + ', write=' + (writable ? 'yes' : 'no') + ')'
+            };
         }
     },
     close: {
@@ -219,7 +322,14 @@ const syscalls = {
         desc: 'Close an open file descriptor.',
         syntax: 'close <fd>',
         example: 'close 3',
-        run: (a) => ({ ok: !!a.trim(), msg: a.trim() ? 'Closed FD ' + a.trim() : 'close: invalid FD' })
+        run: (a) => {
+            const fd = parseNumber(a, -1);
+            if (fd < 0 || !getOpenFile(fd)) {
+                return { ok: false, msg: 'close: invalid FD' };
+            }
+            delete systemState.openFiles[fd];
+            return { ok: true, msg: 'Closed FD ' + fd };
+        }
     },
     read: {
         cat: 'file',
@@ -229,18 +339,46 @@ const syscalls = {
         run: (a) => {
             const [fd = '3', bytesText = '64'] = a.trim().split(/\s+/);
             const bytes = Math.max(1, parseNumber(bytesText, 64));
-            return { ok: true, msg: 'Read ' + bytes + ' bytes from FD ' + fd };
+            const handle = getOpenFile(fd);
+            if (!handle) return { ok: false, msg: 'read: invalid FD ' + fd };
+            if (!canRead(handle.flags)) return { ok: false, msg: 'read: FD ' + fd + ' is not open for reading' };
+
+            const file = systemState.files[handle.path];
+            const chunk = file.content.slice(handle.position, handle.position + bytes);
+            handle.position += chunk.length;
+
+            return {
+                ok: true,
+                msg: 'Read ' + chunk.length + ' bytes from ' + handle.path + ' via FD ' + fd + ': ' + formatFilePreview(chunk)
+            };
         }
     },
     write: {
         cat: 'file',
         desc: 'Write bytes from a buffer to a file descriptor.',
         syntax: 'write <fd> <text>',
-        example: 'write 1 hello',
+        example: 'write 3 hello',
         run: (a) => {
             const [fd = '1', ...rest] = a.trim().split(/\s+/);
             const text = rest.join(' ') || 'data';
-            return { ok: true, msg: 'Wrote ' + text.length + ' bytes to FD ' + fd };
+            if (String(fd) === '1') {
+                return { ok: true, msg: 'STDOUT: ' + text };
+            }
+
+            const handle = getOpenFile(fd);
+            if (!handle) return { ok: false, msg: 'write: invalid FD ' + fd };
+            if (!canWrite(handle.flags)) return { ok: false, msg: 'write: FD ' + fd + ' is not open for writing' };
+
+            const file = systemState.files[handle.path];
+            const insertAt = handle.flags.includes('O_APPEND') ? file.content.length : handle.position;
+            file.content = file.content.slice(0, insertAt) + text + file.content.slice(insertAt);
+            handle.position = insertAt + text.length;
+            saveFiles();
+
+            return {
+                ok: true,
+                msg: 'Wrote ' + text.length + ' bytes to ' + handle.path + ' via FD ' + fd + '. Current file: ' + formatFilePreview(file.content)
+            };
         }
     },
     unlink: {
@@ -248,7 +386,22 @@ const syscalls = {
         desc: 'Remove a directory entry for a file.',
         syntax: 'unlink <path>',
         example: 'unlink temp.txt',
-        run: (a) => ({ ok: true, msg: 'File deleted: ' + (a.trim() || 'file') })
+        run: (a) => {
+            const target = a.trim() || 'file';
+            if (!systemState.files[target]) {
+                return { ok: false, msg: 'unlink: file not found: ' + target };
+            }
+
+            delete systemState.files[target];
+            Object.keys(systemState.openFiles).forEach(fd => {
+                if (systemState.openFiles[fd].path === target) {
+                    delete systemState.openFiles[fd];
+                }
+            });
+            saveFiles();
+
+            return { ok: true, msg: 'File deleted: ' + target };
+        }
     },
 
     malloc: {
@@ -480,6 +633,7 @@ const syscalls = {
     }
 };
 document.addEventListener('DOMContentLoaded', () => {
+    systemState.files = loadFiles();
     recalculateMemoryState();
     setupInput();
     renderMemory();
@@ -705,6 +859,10 @@ function resetKernel() {
     systemState.executionCount = 0;
     systemState.history = [];
     systemState.allocations = [];
+    systemState.nextFd = 3;
+    systemState.openFiles = {};
+    systemState.files = cloneDefaultFiles();
+    saveFiles();
     recalculateMemoryState();
     document.getElementById('console-output').innerHTML = '';
     addLog('$ System reinitialized', 'info');
@@ -720,6 +878,8 @@ function showHelp() {
     addLog('--- QUICK REFERENCE ---', 'info');
     addLog('Process: fork <name> exec <program> wait <pid> exit <code> kill <pid> <sig> getpid', 'info');
     addLog('File: open <path> <flags> close <fd> read <fd> <bytes> write <fd> <text> unlink <path>', 'info');
+    addLog('Try file I/O: open notes.txt O_RDWR | read 3 120 | write 3 hello | close 3', 'info');
+    addLog('Try terminal output: write 1 hello', 'info');
     addLog('Memory: malloc <size> calloc <count> <size> free <size|all> mmap <len> munmap <len> sbrk <inc> brk <size>', 'info');
     addLog('IPC: pipe socket <domain> <type> <proto> shmget semget msgget', 'info');
     addLog('Device: ioctl <fd> <request> gettimeofday uname', 'info');
