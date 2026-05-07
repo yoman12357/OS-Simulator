@@ -1,181 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Allocation Studio</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Allocation Systems | Interactive Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="FileAllocation.css">
 </head>
 <body>
-  <main class="shell">
-    <section class="strip" aria-label="Project summary">
-      <div class="bar">
-        <p class="eyebrow">Lab Mode</p>
-        <h2>Interactive File Allocation Studio</h2>
-      </div>
-    </section>
-
-    <section class="studio">
-      <header class="hero">
-        <a class="back" href="#" aria-label="Back to OS simulator">← Back to OS Simulator</a>
-        <p class="eyebrow">Teacher Demo Build</p>
-        <h1>File Allocation Studio</h1>
-        <p class="lede">
-          Simulate Sequential, Linked, Indexed, and Multi-level Indexed file allocation methods.
-          Define disk blocks, set file sizes, then watch how blocks are allocated and visualized on the disk map.
-        </p>
-        <div class="chips" id="chipList"></div>
-      </header>
-
-      <section class="dashboard">
-        <aside class="panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Control Deck</p>
-              <h3>Allocation Setup</h3>
-            </div>
-            <span class="pill" id="blockCount">0 blocks</span>
-          </div>
-          <div class="panel-body">
-            <div class="form-grid">
-              <label>
-                Total disk blocks
-                <input id="totalBlocks" type="number" min="8" max="128" value="32">
-              </label>
-
-              <label>
-                File name
-                <input id="fileName" type="text" placeholder="e.g. document.txt" value="myfile.txt">
-              </label>
-
-              <div class="two">
-                <label>
-                  File size (blocks)
-                  <input id="fileSize" type="number" min="1" value="6">
-                </label>
-                <label>
-                  Start block
-                  <input id="startBlock" type="number" min="0" value="2" placeholder="For sequential">
-                </label>
-              </div>
-
-              <label class="conditional visible" id="linkedField">
-                Linked block chain (comma-separated)
-                <input id="linkedBlocks" value="2, 7, 12, 18, 24, 29" inputmode="numeric" placeholder="e.g. 2, 7, 12, 18">
-              </label>
-
-              <label class="conditional" id="indexBlockField">
-                Index block number
-                <input id="indexBlock" type="number" min="0" value="5" placeholder="Block holding index">
-              </label>
-
-              <label class="conditional" id="indexedDataField">
-                Data block addresses (comma-separated)
-                <input id="indexedBlocks" value="8, 13, 17, 22, 27, 31" inputmode="numeric" placeholder="e.g. 8, 13, 17, 22">
-              </label>
-
-              <!-- Multi-level Indexed fields -->
-              <label class="conditional" id="l1IndexField">
-                Level-1 index block
-                <input id="l1IndexBlock" type="number" min="0" value="3">
-              </label>
-              <label class="conditional" id="l2IndexField">
-                Level-2 index blocks (comma-separated)
-                <input id="l2IndexBlocks" value="6, 10" inputmode="numeric">
-              </label>
-              <label class="conditional" id="mlDataField">
-                Data blocks (comma-separated)
-                <input id="mlDataBlocks" value="14, 18, 21, 25, 28, 31" inputmode="numeric">
-              </label>
-
-              <div>
-                <p class="eyebrow">Allocation Method</p>
-                <div class="algorithms" id="algoButtons"></div>
-              </div>
-
-              <div class="actions">
-                <button class="btn primary" id="run">Allocate File</button>
-                <button class="btn ghost" id="sample">Load Sample</button>
-              </div>
-              <div class="actions">
-                <button class="btn" id="addFile">Add Another File</button>
-                <button class="btn ghost" id="reset">Reset All</button>
-              </div>
-              <div class="error" id="error"></div>
-              <p class="note">
-                Sequential: contiguous blocks. Linked: chain via pointers. Indexed: index block holds addresses. Multi-level Indexed: hierarchical index blocks for large files.
-              </p>
-            </div>
-          </div>
-        </aside>
-
-        <section>
-          <div class="stats">
-            <article class="stat">
-              <p class="eyebrow">Status</p>
-              <strong id="status">IDLE</strong>
-              <span>Allocator ready</span>
-            </article>
-            <article class="stat">
-              <p class="eyebrow">Method</p>
-              <strong id="activeAlgo">Sequential</strong>
-              <span>Active mode</span>
-            </article>
-            <article class="stat">
-              <p class="eyebrow">Blocks Used</p>
-              <strong id="blocksUsed">—</strong>
-              <span>Data blocks</span>
-            </article>
-            <article class="stat">
-              <p class="eyebrow">Overhead</p>
-              <strong id="overhead">—</strong>
-              <span>Index/pointer blocks</span>
-            </article>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="eyebrow">Visualization</p>
-                <h3>Disk Block Map</h3>
-              </div>
-              <span class="pill" id="runBadge">No allocation yet</span>
-            </div>
-            <div class="panel-body">
-              <div class="disk-map-wrap">
-                <div class="disk-map" id="diskMap"></div>
-                <div class="legend" id="legend"></div>
-              </div>
-              <div class="panel structure-panel">
-                <div class="panel-head">
-                  <div>
-                    <p class="eyebrow">Data Structure</p>
-                    <h3 id="structTitle">Allocation Table</h3>
-                  </div>
-                </div>
-                <div class="panel-body">
-                  <div id="structViz"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <section class="panel console-panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Execution Console</p>
-            <h3>Allocator Trace</h3>
-          </div>
-          <span class="pill">Live log</span>
+    <header class="hero">
+        <div class="container">
+            <h1><i class="fas fa-hdd"></i> File Allocation Systems</h1>
+            <p class="tagline">Interactive visualization of disk space management techniques in modern operating systems</p>
         </div>
-        <div class="trace" id="trace">$ FILE_ALLOCATOR initialized
-$ Configure a file and select an allocation method...</div>
-      </section>
-    </section>
-  </main>
+    </header>
 
-  <script src="script.js"></script>
+    <main>
+        <div class="container">
+            <!-- Interactive Simulator Section -->
+            <section id="simulator" class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-microscope"></i> Interactive Simulator</h2>
+                    <p>Experiment with different file allocation methods and see how they work in real-time</p>
+                </div>
+
+                <div class="simulator-wrapper">
+                    <div class="config-panel">
+                        <h3>Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label for="total-blocks">
+                                <i class="fas fa-cube"></i> Disk Size:
+                            </label>
+                            <div class="input-with-controls">
+                                <input type="number" id="total-blocks" min="10" max="100" value="30">
+                                <span class="unit">blocks</span>
+                            </div>
+                        </div>
+
+                        <div id="manual-inputs" class="form-group">
+                            <h4><i class="fas fa-edit"></i> Manual Block Allocation</h4>
+                            <!-- Inputs will be generated here dynamically -->
+                        </div>
+                        
+                        
+                        <div class="form-group">
+                            <label for="num-files">
+                                <i class="fas fa-file"></i> Number of Files:
+                            </label>
+                            <div class="input-with-controls">
+                                <input type="number" id="num-files" min="1" max="10" value="3">
+                            </div>
+                        </div>
+                        
+                        <div id="file-sizes-container" class="file-sizes">
+                            <!-- File size inputs will be dynamically generated here -->
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="allocation-method">
+                                <i class="fas fa-sitemap"></i> Allocation Method:
+                            </label>
+                            <select id="allocation-method" class="select-styled">
+                                <option value="contiguous">Sequential (Contiguous)</option>
+                                <option value="linked">Linked List</option>
+                                <option value="indexed">Indexed</option>
+                                <option value="sta">⭐ Smart Tiered Allocation (STA)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="run-simulation" class="btn btn-primary">
+                                <i class="fas fa-play"></i> Run Simulation
+                            </button>
+                            <button id="reset-simulation" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="simulation-output">
+                        <div class="disk-visualization">
+                            <h3><i class="fas fa-database"></i> Disk Blocks</h3>
+                            <div class="instructions">
+                                <p>Click on blocks to mark them as busy before running the simulation</p>
+                            </div>
+                            <div id="disk-container" class="disk-grid">
+                                <!-- Disk blocks will be rendered here -->
+                            </div>
+                        </div>
+                        
+                        <div class="allocation-results">
+                            <h3><i class="fas fa-info-circle"></i> Allocation Details</h3>
+                            <div id="allocation-info" class="info-panel">
+                                <!-- Allocation information will be shown here -->
+                                <p>Select an allocation method and run the simulation to see results</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Concepts Section -->
+            <section id="concepts" class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-book"></i> Understanding File Allocation</h2>
+                    <p>Learn how operating systems manage files on storage devices</p>
+                </div>
+
+                <div class="concept-wrapper">
+                    <div class="concept-intro">
+                        <h3>What is File Allocation?</h3>
+                        <p>File allocation refers to the methods operating systems use to organize and store files on storage devices. When you save a file, the OS needs to find available space and keep track of where each part of the file is stored.</p>
+                        
+                        <div class="info-box">
+                            <div class="info-icon"><i class="fas fa-lightbulb"></i></div>
+                            <div class="info-content">
+                                <h4>Why is it important?</h4>
+                                <p>Efficient file allocation systems allow for:</p>
+                                <ul class="feature-list">
+                                    <li><span class="highlight">Optimized storage utilization</span> - maximizing available disk space</li>
+                                    <li><span class="highlight">Fast access times</span> - reducing the time needed to read and write files</li>
+                                    <li><span class="highlight">Minimal fragmentation</span> - preventing performance degradation</li>
+                                    <li><span class="highlight">Reliable storage</span> - ensuring data integrity and recoverability</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Allocation Methods Section -->
+            <section id="methods" class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-layer-group"></i> Allocation Methods Compared</h2>
+                    <p>Three primary approaches to organizing files on disk</p>
+                </div>
+
+                <div class="methods-grid">
+                    <!-- Sequential Method -->
+                    <div class="method-card">
+                        <div class="method-icon"><i class="fas fa-grip-lines"></i></div>
+                        <div class="method-content">
+                            <h3>Sequential (Contiguous)</h3>
+                            <p>Files are stored in consecutive blocks on the disk, defined by a starting address and length.</p>
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4><i class="fas fa-plus-circle"></i> Advantages</h4>
+                                    <ul>
+                                        <li>Simple implementation</li>
+                                        <li>Excellent read performance</li>
+                                        <li>Supports both sequential and direct access</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4><i class="fas fa-minus-circle"></i> Disadvantages</h4>
+                                    <ul>
+                                        <li>External fragmentation</li>
+                                        <li>Difficult to expand files</li>
+                                        <li>Requires knowing final file size in advance</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linked Method -->
+                    <div class="method-card">
+                        <div class="method-icon"><i class="fas fa-link"></i></div>
+                        <div class="method-content">
+                            <h3>Linked List</h3>
+                            <p>Each block contains a pointer to the next block in the file chain, forming a linked list structure.</p>
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4><i class="fas fa-plus-circle"></i> Advantages</h4>
+                                    <ul>
+                                        <li>No external fragmentation</li>
+                                        <li>Files can grow dynamically</li>
+                                        <li>No need to declare size at creation</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4><i class="fas fa-minus-circle"></i> Disadvantages</h4>
+                                    <ul>
+                                        <li>Poor random access performance</li>
+                                        <li>Storage space wasted for pointers</li>
+                                        <li>Reliability issues if pointers are damaged</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="note">
+                                <h5><i class="fas fa-info-circle"></i> File Allocation Table (FAT)</h5>
+                                <p>A variation of linked allocation where all pointers are stored in a separate table at the beginning of the disk.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indexed Method -->
+                    <div class="method-card">
+                        <div class="method-icon"><i class="fas fa-table"></i></div>
+                        <div class="method-content">
+                            <h3>Indexed</h3>
+                            <p>Each file has an index block containing pointers to all blocks belonging to the file.</p>
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4><i class="fas fa-plus-circle"></i> Advantages</h4>
+                                    <ul>
+                                        <li>Supports direct access without fragmentation</li>
+                                        <li>Files can grow as needed</li>
+                                        <li>No block consolidation issues</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4><i class="fas fa-minus-circle"></i> Disadvantages</h4>
+                                    <ul>
+                                        <li>Wastes a full index block even for tiny files</li>
+                                        <li>Large files limited by single index block size</li>
+                                        <li>Always 2 disk accesses (index → data)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STA Method -->
+                    <div class="method-card method-card--sta">
+                        <div class="method-icon method-icon--sta"><i class="fas fa-star"></i></div>
+                        <div class="method-content">
+                            <h3>⭐ Smart Tiered Allocation <span class="sta-badge">NEW</span></h3>
+                            <p>Automatically selects the best storage strategy based on file size — eliminating every weakness of Indexed allocation.</p>
+
+                            <div class="sta-tiers">
+                                <div class="sta-tier sta-tier--1">
+                                    <span class="tier-label">Tier 1 — Tiny (1–2 blocks)</span>
+                                    <p>Pointers stored directly in the directory entry. <b>No index block at all</b> — zero overhead, single disk access.</p>
+                                </div>
+                                <div class="sta-tier sta-tier--2">
+                                    <span class="tier-label">Tier 2 — Medium (3–8 blocks)</span>
+                                    <p>All medium files share <b>one</b> index block. Dramatically reduces index block waste compared to Indexed.</p>
+                                </div>
+                                <div class="sta-tier sta-tier--3">
+                                    <span class="tier-label">Tier 3 — Large (9+ blocks)</span>
+                                    <p>Automatic two-level index. Main index → sub-indexes → data. Handles huge files with no manual setup.</p>
+                                </div>
+                            </div>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4><i class="fas fa-plus-circle"></i> Advantages over Indexed</h4>
+                                    <ul>
+                                        <li>Zero index overhead for tiny files</li>
+                                        <li>Shared index block saves space for medium files</li>
+                                        <li>Auto two-level handles large files seamlessly</li>
+                                        <li>Single disk access for tiny files (vs 2 in Indexed)</li>
+                                        <li>No fragmentation, full random access retained</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4><i class="fas fa-minus-circle"></i> Trade-offs</h4>
+                                    <ul>
+                                        <li>More complex implementation logic</li>
+                                        <li>Tier classification adds small decision overhead</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 File Allocation Simulator | Created for educational purposes</p>
+            <div class="footer-links">
+                <a href="#simulator">Simulator</a>
+                <a href="#concepts">Concepts</a>
+                <a href="#methods">Methods</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="FileAllocation.js"></script>
 </body>
 </html>
