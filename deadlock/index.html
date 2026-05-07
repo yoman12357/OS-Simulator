@@ -1,1 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Simulator | Deadlocks</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <main class="app-shell">
+        <header class="app-header">
+            <a class="back-link" href="../index.html">Back</a>
+            <div>
+                <p class="eyebrow">OS Simulator</p>
+                <h1>Deadlock Simulator</h1>
+            </div>
+            <div class="status-pill" id="status-pill">Ready</div>
+        </header>
 
+        <nav class="tabs">
+            <button class="tab active" data-view="rag" onclick="setView('rag')" type="button">RAG</button>
+            <button class="tab" data-view="banker" onclick="setView('banker')" type="button">Banker's</button>
+            <button class="tab" data-view="wfg" onclick="setView('wfg')" type="button">WFG</button>
+        </nav>
+
+        <section class="view active" id="rag-view">
+            <section class="panel setup-panel">
+                <div class="panel-head">
+                    <h2>Resource Allocation Graph</h2>
+                    <button class="ghost-btn" onclick="loadRagSample()" type="button">Load Sample</button>
+                </div>
+
+                <div class="form-grid compact">
+                    <label>
+                        Processes
+                        <input id="rag-process-count" min="1" max="8" type="number" value="3">
+                    </label>
+                    <label>
+                        Resources
+                        <input id="rag-resource-count" min="1" max="8" type="number" value="3">
+                    </label>
+                    <button class="primary-btn" onclick="createRagModel()" type="button">Create</button>
+                </div>
+
+                <div class="edge-inputs">
+                    <div class="edge-card">
+                        <h3>Allocation Edge</h3>
+                        <div class="form-grid">
+                            <label>
+                                Resource
+                                <select id="rag-alloc-resource"></select>
+                            </label>
+                            <label>
+                                Process
+                                <select id="rag-alloc-process"></select>
+                            </label>
+                            <button class="primary-btn" onclick="addRagAllocation()" type="button">Add R to P</button>
+                        </div>
+                    </div>
+
+                    <div class="edge-card">
+                        <h3>Request Edge</h3>
+                        <div class="form-grid">
+                            <label>
+                                Process
+                                <select id="rag-req-process"></select>
+                            </label>
+                            <label>
+                                Resource
+                                <select id="rag-req-resource"></select>
+                            </label>
+                            <button class="primary-btn" onclick="addRagRequest()" type="button">Add P to R</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary-btn" onclick="analyzeRag()" type="button">Detect Deadlock</button>
+                    <button class="ghost-btn" onclick="clearRagEdges()" type="button">Clear Edges</button>
+                </div>
+            </section>
+
+            <section class="panel output-panel">
+                <div class="result-bar" id="rag-result">Create or load a graph.</div>
+                <canvas id="rag-canvas" width="900" height="460"></canvas>
+                <div class="edge-list" id="rag-edge-list"></div>
+            </section>
+        </section>
+
+        <section class="view" id="banker-view">
+            <section class="panel setup-panel">
+                <div class="panel-head">
+                    <h2>Banker's Algorithm</h2>
+                    <button class="ghost-btn" onclick="loadBankerSample()" type="button">Load Sample</button>
+                </div>
+
+                <div class="form-grid compact">
+                    <label>
+                        Processes
+                        <input id="banker-process-count" min="1" max="8" type="number" value="5">
+                    </label>
+                    <label>
+                        Resources
+                        <input id="banker-resource-count" min="1" max="6" type="number" value="3">
+                    </label>
+                    <button class="primary-btn" onclick="createBankerModel()" type="button">Create</button>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary-btn" onclick="runBanker()" type="button">Check State</button>
+                    <button class="ghost-btn" onclick="clearBanker()" type="button">Clear Values</button>
+                </div>
+            </section>
+
+            <section class="panel output-panel">
+                <div class="result-bar" id="banker-result">Enter matrices and check state.</div>
+                <div class="matrix-grid" id="banker-matrices"></div>
+                <div class="sequence-box" id="banker-sequence"></div>
+            </section>
+        </section>
+
+        <section class="view" id="wfg-view">
+            <section class="panel setup-panel">
+                <div class="panel-head">
+                    <h2>Wait-For Graph</h2>
+                    <button class="ghost-btn" onclick="loadWfgSample()" type="button">Load Sample</button>
+                </div>
+
+                <div class="form-grid compact">
+                    <label>
+                        Processes
+                        <input id="wfg-process-count" min="1" max="8" type="number" value="3">
+                    </label>
+                    <label>
+                        Resources
+                        <input id="wfg-resource-count" min="1" max="8" type="number" value="3">
+                    </label>
+                    <button class="primary-btn" onclick="createWfgModel()" type="button">Create</button>
+                </div>
+
+                <div class="edge-inputs">
+                    <div class="edge-card">
+                        <h3>Allocation Edge</h3>
+                        <div class="form-grid">
+                            <label>
+                                Resource
+                                <select id="wfg-alloc-resource"></select>
+                            </label>
+                            <label>
+                                Process
+                                <select id="wfg-alloc-process"></select>
+                            </label>
+                            <button class="primary-btn" onclick="addWfgAllocation()" type="button">Add R to P</button>
+                        </div>
+                    </div>
+
+                    <div class="edge-card">
+                        <h3>Request Edge</h3>
+                        <div class="form-grid">
+                            <label>
+                                Process
+                                <select id="wfg-req-process"></select>
+                            </label>
+                            <label>
+                                Resource
+                                <select id="wfg-req-resource"></select>
+                            </label>
+                            <button class="primary-btn" onclick="addWfgRequest()" type="button">Add P to R</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary-btn" onclick="analyzeWfg()" type="button">Detect Deadlock</button>
+                    <button class="ghost-btn" onclick="clearWfgEdges()" type="button">Clear Edges</button>
+                </div>
+            </section>
+
+            <section class="panel output-panel">
+                <div class="result-bar" id="wfg-result">Create or load a graph.</div>
+                <div class="side-by-side">
+                    <div>
+                        <h3>RAG</h3>
+                        <canvas id="wfg-rag-canvas" width="640" height="420"></canvas>
+                    </div>
+                    <div>
+                        <h3>WFG</h3>
+                        <canvas id="wfg-canvas" width="640" height="420"></canvas>
+                    </div>
+                </div>
+                <div class="edge-list" id="wfg-edge-list"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -7,7 +7,9 @@ const fragState = {
 	processes: [],
 	pending: [],
 	nextId: 1,
-	allocationCount: 0
+	allocationCount: 0,
+	nextPartitionIndex: 0,
+	nextBlockIndex: 0
 };
 
 const COLORS = [
@@ -165,6 +167,8 @@ function applyConfig(silent) {
 	fragState.pending = [];
 	fragState.nextId = 1;
 	fragState.allocationCount = 0;
+	fragState.nextPartitionIndex = 0;
+	fragState.nextBlockIndex = 0;
 	fragState.partitions = partitions.map((size, index) => ({
 		index,
 		size,
@@ -269,6 +273,9 @@ function allocateProcess(process) {
 		process.internal = partition.size - process.size;
 		fragState.processes.push(process);
 		fragState.allocationCount++;
+		if (fragState.policy === 'next') {
+			updateNextPartitionIndex(index);
+		}
 		addLog(`$ Allocated ${process.name} in partition ${index + 1} (internal ${process.internal} MB)`, 'output');
 		return true;
 	}
@@ -290,11 +297,17 @@ function allocateProcess(process) {
 	process.internal = 0;
 	fragState.processes.push(process);
 	fragState.allocationCount++;
+	if (fragState.policy === 'next') {
+		updateNextBlockIndex(blockIndex);
+	}
 	addLog(`$ Allocated ${process.name} at base ${process.start} MB`, 'output');
 	return true;
 }
 
 function findPartitionIndex(size) {
+	if (fragState.policy === 'next') {
+		return findNextFitPartitionIndex(size);
+	}
 	const candidates = fragState.partitions
 		.filter((part) => !part.allocatedId && part.size >= size)
 		.map((part) => part.index);
@@ -313,6 +326,9 @@ function findPartitionIndex(size) {
 }
 
 function findBlockIndex(size) {
+	if (fragState.policy === 'next') {
+		return findNextFitBlockIndex(size);
+	}
 	const freeBlocks = fragState.blocks
 		.map((block, index) => ({ block, index }))
 		.filter((entry) => entry.block.status === 'free' && entry.block.size >= size);
@@ -326,6 +342,52 @@ function findBlockIndex(size) {
 		if (fragState.policy === 'worst' && entry.block.size > selected.block.size) selected = entry;
 	});
 	return selected.index;
+}
+
+function normalizeIndex(index, length) {
+	if (!length) return 0;
+	const value = index % length;
+	return value < 0 ? value + length : value;
+}
+
+function findNextFitPartitionIndex(size) {
+	const length = fragState.partitions.length;
+	if (!length) return -1;
+	const start = normalizeIndex(fragState.nextPartitionIndex, length);
+
+	for (let offset = 0; offset < length; offset++) {
+		const index = (start + offset) % length;
+		const part = fragState.partitions[index];
+		if (!part.allocatedId && part.size >= size) {
+			return index;
+		}
+	}
+	return -1;
+}
+
+function findNextFitBlockIndex(size) {
+	const length = fragState.blocks.length;
+	if (!length) return -1;
+	const start = normalizeIndex(fragState.nextBlockIndex, length);
+
+	for (let offset = 0; offset < length; offset++) {
+		const index = (start + offset) % length;
+		const block = fragState.blocks[index];
+		if (block.status === 'free' && block.size >= size) {
+			return index;
+		}
+	}
+	return -1;
+}
+
+function updateNextPartitionIndex(index) {
+	const length = fragState.partitions.length;
+	fragState.nextPartitionIndex = length ? (index + 1) % length : 0;
+}
+
+function updateNextBlockIndex(index) {
+	const length = fragState.blocks.length;
+	fragState.nextBlockIndex = length ? (index + 1) % length : 0;
 }
 
 function handleProcessAction(event) {
@@ -382,6 +444,7 @@ function mergeFreeBlocks() {
 		}
 	});
 	fragState.blocks = merged;
+	fragState.nextBlockIndex = normalizeIndex(fragState.nextBlockIndex, fragState.blocks.length);
 }
 
 function compactMemory() {
@@ -404,6 +467,7 @@ function compactMemory() {
 		newBlocks.push({ start: cursor, size: freeSize, status: 'free', procId: null });
 	}
 	fragState.blocks = newBlocks;
+	fragState.nextBlockIndex = 0;
 	addLog(`$ Compaction complete. Free block: ${freeSize} MB`, 'info');
 	setStatus('ok', 'READY');
 	updateAll();

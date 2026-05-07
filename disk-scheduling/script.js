@@ -7,17 +7,10 @@ const algorithms = [
   "C-LOOK",
   "RSS",
   "LIFO",
-  "N-Step SCAN",
-  "FSCAN",
   "Priority",
   "Deadline",
-  "Aged SSTF",
-  "FD-SCAN",
-  "SCAN-EDF",
 ];
 let selectedAlgorithm = "FCFS";
-const deadlineAlgorithms = ["Deadline", "FD-SCAN", "SCAN-EDF"];
-const batchAlgorithms = ["N-Step SCAN", "SCAN-EDF"];
 
 const el = {
   requests: document.getElementById("requests"),
@@ -26,10 +19,8 @@ const el = {
   direction: document.getElementById("direction"),
   priorities: document.getElementById("priorities"),
   deadlines: document.getElementById("deadlines"),
-  batchSize: document.getElementById("batchSize"),
   priorityField: document.getElementById("priorityField"),
   deadlineField: document.getElementById("deadlineField"),
-  batchField: document.getElementById("batchField"),
   newRequest: document.getElementById("newRequest"),
   addRequest: document.getElementById("addRequest"),
   sample: document.getElementById("sample"),
@@ -64,7 +55,6 @@ function parseRequests() {
   const values = parseNumberList(el.requests.value);
   const priorities = parseNumberList(el.priorities.value);
   const deadlines = parseNumberList(el.deadlines.value);
-  const batchSize = Number(el.batchSize.value);
 
   if (!Number.isInteger(diskSize) || diskSize < 2) {
     throw new Error("Disk size must be at least 2.");
@@ -78,10 +68,7 @@ function parseRequests() {
   if (values.some((value) => !Number.isInteger(value) || value < 0 || value >= diskSize)) {
     throw new Error(`Every request must be an integer from 0 to ${diskSize - 1}.`);
   }
-  if (batchAlgorithms.includes(selectedAlgorithm) && (!Number.isInteger(batchSize) || batchSize < 1)) {
-    throw new Error("N-Step batch size must be at least 1.");
-  }
-  if (selectedAlgorithm === "Priority" || deadlineAlgorithms.includes(selectedAlgorithm)) {
+  if (selectedAlgorithm === "Priority" || selectedAlgorithm === "Deadline") {
     const list = selectedAlgorithm === "Priority" ? priorities : deadlines;
     const label = selectedAlgorithm === "Priority" ? "priority" : "deadline";
     if (list.length !== values.length) {
@@ -92,7 +79,7 @@ function parseRequests() {
     }
   }
 
-  return { requests: values, priorities, deadlines, batchSize, head, diskSize, direction: el.direction.value };
+  return { requests: values, priorities, deadlines, head, diskSize, direction: el.direction.value };
 }
 
 function totalMovement(sequence) {
@@ -135,98 +122,6 @@ function metadataSchedule(requests, metadata, mode) {
     .map((item) => item.request);
 }
 
-function agedSstfSchedule(requests, head, diskSize) {
-  const pending = requests.map((request, index) => ({ request, index }));
-  const sequence = [head];
-  const ageWeight = Math.max(1, Math.round(diskSize / 40));
-  let current = head;
-
-  while (pending.length) {
-    let bestIndex = 0;
-    for (let i = 1; i < pending.length; i += 1) {
-      const bestAge = requests.length - pending[bestIndex].index;
-      const candidateAge = requests.length - pending[i].index;
-      const bestScore = Math.abs(pending[bestIndex].request - current) - bestAge * ageWeight;
-      const candidateScore = Math.abs(pending[i].request - current) - candidateAge * ageWeight;
-      if (
-        candidateScore < bestScore ||
-        (candidateScore === bestScore && pending[i].index < pending[bestIndex].index)
-      ) {
-        bestIndex = i;
-      }
-    }
-    current = pending.splice(bestIndex, 1)[0].request;
-    sequence.push(current);
-  }
-
-  return sequence;
-}
-
-function fscanSchedule(requests, head, diskSize, direction) {
-  const splitAt = Math.ceil(requests.length / 2);
-  const activeQueue = requests.slice(0, splitAt);
-  const waitingQueue = requests.slice(splitAt);
-  const sequence = [head];
-
-  [activeQueue, waitingQueue].forEach((queue) => {
-    if (!queue.length) return;
-    const currentHead = sequence[sequence.length - 1];
-    const segment = scanSegment(queue, currentHead, diskSize, direction);
-    sequence.push(...segment.slice(1));
-  });
-
-  return sequence;
-}
-
-function fdScanSchedule(requests, deadlines, head) {
-  const pending = requests.map((request, index) => ({ request, deadline: deadlines[index], index }));
-  const sequence = [head];
-  let current = head;
-  let elapsedSeek = 0;
-
-  while (pending.length) {
-    const feasible = pending
-      .map((item, index) => ({ ...item, pendingIndex: index, seek: Math.abs(item.request - current) }))
-      .filter((item) => elapsedSeek + item.seek <= item.deadline);
-    const candidates = feasible.length
-      ? feasible
-      : pending.map((item, index) => ({ ...item, pendingIndex: index, seek: Math.abs(item.request - current) }));
-
-    candidates.sort((a, b) => {
-      if (a.deadline !== b.deadline) return a.deadline - b.deadline;
-      if (a.seek !== b.seek) return a.seek - b.seek;
-      return a.index - b.index;
-    });
-
-    const next = pending.splice(candidates[0].pendingIndex, 1)[0];
-    elapsedSeek += Math.abs(next.request - current);
-    current = next.request;
-    sequence.push(current);
-  }
-
-  return sequence;
-}
-
-function scanEdfSchedule(requests, deadlines, head, diskSize, direction, batchSize) {
-  const deadlineOrder = requests
-    .map((request, index) => ({ request, deadline: deadlines[index], index }))
-    .sort((a, b) => {
-      if (a.deadline !== b.deadline) return a.deadline - b.deadline;
-      return a.index - b.index;
-    })
-    .map((item) => item.request);
-  const sequence = [head];
-
-  for (let i = 0; i < deadlineOrder.length; i += batchSize) {
-    const batch = deadlineOrder.slice(i, i + batchSize);
-    const currentHead = sequence[sequence.length - 1];
-    const segment = scanSegment(batch, currentHead, diskSize, direction);
-    sequence.push(...segment.slice(1));
-  }
-
-  return sequence;
-}
-
 function buildSchedule(type, requests, head, diskSize, direction, options = {}) {
   const { left, right } = sortedParts(requests, head);
   const max = diskSize - 1;
@@ -236,23 +131,6 @@ function buildSchedule(type, requests, head, diskSize, direction, options = {}) 
   if (type === "RSS") return [head, ...pseudoShuffle(requests, head + diskSize + requests.length)];
   if (type === "Priority") return [head, ...metadataSchedule(requests, options.priorities, "priority")];
   if (type === "Deadline") return [head, ...metadataSchedule(requests, options.deadlines, "deadline")];
-  if (type === "Aged SSTF") return agedSstfSchedule(requests, head, diskSize);
-  if (type === "FSCAN") return fscanSchedule(requests, head, diskSize, direction);
-  if (type === "FD-SCAN") return fdScanSchedule(requests, options.deadlines, head);
-  if (type === "SCAN-EDF") {
-    return scanEdfSchedule(requests, options.deadlines, head, diskSize, direction, options.batchSize);
-  }
-
-  if (type === "N-Step SCAN") {
-    const sequence = [head];
-    for (let i = 0; i < requests.length; i += options.batchSize) {
-      const batch = requests.slice(i, i + options.batchSize);
-      const currentHead = sequence[sequence.length - 1];
-      const segment = scanSegment(batch, currentHead, diskSize, direction);
-      sequence.push(...segment.slice(1));
-    }
-    return sequence;
-  }
 
   if (type === "SSTF") {
     const pending = [...requests];
@@ -366,11 +244,10 @@ function updateQueueCount() {
 
 function runScheduler() {
   try {
-    const { requests, priorities, deadlines, batchSize, head, diskSize, direction } = parseRequests();
+    const { requests, priorities, deadlines, head, diskSize, direction } = parseRequests();
     const sequence = buildSchedule(selectedAlgorithm, requests, head, diskSize, direction, {
       priorities,
       deadlines,
-      batchSize,
     });
     const total = totalMovement(sequence);
     el.error.textContent = "";
@@ -400,8 +277,7 @@ function selectAlgorithm(type) {
 
 function updateConditionalFields() {
   el.priorityField.classList.toggle("visible", selectedAlgorithm === "Priority");
-  el.deadlineField.classList.toggle("visible", deadlineAlgorithms.includes(selectedAlgorithm));
-  el.batchField.classList.toggle("visible", batchAlgorithms.includes(selectedAlgorithm));
+  el.deadlineField.classList.toggle("visible", selectedAlgorithm === "Deadline");
 }
 
 function setupAlgorithms() {
@@ -435,7 +311,6 @@ el.sample.addEventListener("click", () => {
   el.requests.value = "98, 183, 37, 122, 14, 124, 65, 67";
   el.priorities.value = "2, 5, 1, 4, 3, 2, 5, 1";
   el.deadlines.value = "90, 20, 75, 45, 110, 60, 30, 100";
-  el.batchSize.value = "3";
   el.head.value = "53";
   el.diskSize.value = "200";
   el.direction.value = "right";
@@ -447,7 +322,6 @@ el.reset.addEventListener("click", () => {
   el.requests.value = "";
   el.priorities.value = "";
   el.deadlines.value = "";
-  el.batchSize.value = "3";
   el.head.value = "0";
   el.diskSize.value = "200";
   el.direction.value = "right";
@@ -462,7 +336,7 @@ el.reset.addEventListener("click", () => {
 });
 
 el.run.addEventListener("click", runScheduler);
-[el.requests, el.head, el.diskSize, el.direction, el.priorities, el.deadlines, el.batchSize].forEach((input) => {
+[el.requests, el.head, el.diskSize, el.direction, el.priorities, el.deadlines].forEach((input) => {
   input.addEventListener("input", updateQueueCount);
   input.addEventListener("change", updateQueueCount);
 });

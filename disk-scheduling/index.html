@@ -23,7 +23,7 @@
         <p class="eyebrow">Teacher Demo Build</p>
         <h1>Disk Scheduler Studio</h1>
         <p class="lede">
-          Simulate FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK, RSS, LIFO, N-Step SCAN, FSCAN, Priority, Deadline, Aged SSTF, FD-SCAN, and SCAN-EDF disk scheduling.
+          Simulate FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK, RSS, LIFO, Priority, and Deadline disk scheduling.
           Add request cylinders, choose a head position and direction, then watch the seek path update step by step.
         </p>
         <div class="chips" id="chipList"></div>
@@ -80,11 +80,6 @@
                 <input id="deadlines" value="90, 20, 75, 45, 110, 60, 30, 100" inputmode="numeric">
               </label>
 
-              <label class="conditional" id="batchField">
-                N-Step batch size
-                <input id="batchSize" type="number" min="1" value="3">
-              </label>
-
               <div class="actions">
                 <button class="btn" id="addRequest">Add Request</button>
                 <button class="btn ghost" id="sample">Load Sample</button>
@@ -101,7 +96,7 @@
               </div>
               <div class="error" id="error"></div>
               <p class="note">
-                Priority serves the highest number first. Deadline, FD-SCAN, and SCAN-EDF use deadline values. N-Step SCAN and SCAN-EDF use batch size for grouped scans.
+                Priority serves the highest number first. Deadline uses EDF order, so the smallest deadline is served first.
               </p>
             </div>
           </div>
