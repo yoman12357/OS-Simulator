@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'DEADLOCK_(RAG)': 'deadlock/index.html',
         PROCESS_SYNC: 'process-synchronization/index.html',
         DISK_SCHEDULING: 'disk-scheduling/index.html',
-        FILE_SYSTEM: 'file-system/index.html',
+        DIRECTORY_STRUCTURES: 'directory-structures/index.html',
         FILE_ALLOCATION: 'file-allocation/index.html',
         RTOS: 'rtos/index.html',
         STATE_TRANSITION: 'process-state-transition/index.html'
