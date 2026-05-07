@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────
-//  STATE
-// ─────────────────────────────────────────────
 const schedulerState = {
     processes: [],
     nextId: 1,
@@ -48,9 +45,6 @@ const COLORS = [
     '#38bdf8', '#e879f9'
 ];
 
-// ─────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     updateAlgoDoc('fcfs');
     setActiveAlgo('fcfs');
@@ -66,9 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ─────────────────────────────────────────────
-//  PROCESS MANAGEMENT
-// ─────────────────────────────────────────────
 function addProcess() {
     const nameInput    = document.getElementById('proc-name');
     const arrivalInput = document.getElementById('proc-arrival');
@@ -146,9 +137,6 @@ function loadSample() {
     updateProcCount();
 }
 
-// ─────────────────────────────────────────────
-//  ALGORITHM SELECTION
-// ─────────────────────────────────────────────
 function selectAlgo(algo) {
     schedulerState.currentAlgo = algo;
     setActiveAlgo(algo);
@@ -176,9 +164,6 @@ function updateAlgoDoc(algo) {
     document.getElementById('doc-desc').textContent    = meta.desc;
 }
 
-// ─────────────────────────────────────────────
-//  SCHEDULER ALGORITHMS
-// ─────────────────────────────────────────────
 function deepCopy(processes) {
     return processes.map(p => ({ ...p, remaining: p.burst }));
 }
@@ -249,7 +234,6 @@ function scheduleRR(procs, quantum) {
     const arrived = new Set();
     let idx = 0;
 
-    // seed first arrivals
     while (idx < queue.length && queue[idx].arrival <= time) {
         readyQueue.push(queue[idx++]);
         arrived.add(queue[idx - 1].id);
@@ -270,7 +254,6 @@ function scheduleRR(procs, quantum) {
         time += run;
         p.remaining -= run;
 
-        // enqueue newly arrived processes
         while (idx < queue.length && queue[idx].arrival <= time) {
             readyQueue.push(queue[idx++]);
         }
@@ -329,9 +312,6 @@ function mergeTimeline(tl) {
     return merged;
 }
 
-// ─────────────────────────────────────────────
-//  METRICS CALCULATOR
-// ─────────────────────────────────────────────
 function computeMetrics(procs, timeline) {
     const completionTime = {};
     timeline.forEach(seg => { completionTime[seg.pid] = seg.end; });
@@ -344,9 +324,6 @@ function computeMetrics(procs, timeline) {
     });
 }
 
-// ─────────────────────────────────────────────
-//  RUN
-// ─────────────────────────────────────────────
 function runScheduler() {
     if (schedulerState.processes.length === 0) {
         addLog('Error: no processes to schedule', 'error');
@@ -374,7 +351,6 @@ function runScheduler() {
     schedulerState.results = { timeline, metrics, algo };
     schedulerState.simulationCount++;
 
-    // Log trace
     timeline.forEach(seg => {
         addLog('  [' + seg.start + '→' + seg.end + '] ' + seg.name + ' runs for ' + (seg.end - seg.start) + ' unit(s)', 'output');
     });
@@ -383,7 +359,6 @@ function runScheduler() {
         addLog('  ' + m.name + ' → CT=' + m.ct + ' TAT=' + m.tat + ' WT=' + m.wt, 'output');
     });
 
-    // Averages
     const avgWT  = (metrics.reduce((s, m) => s + m.wt,  0) / metrics.length).toFixed(2);
     const avgTAT = (metrics.reduce((s, m) => s + m.tat, 0) / metrics.length).toFixed(2);
     const totalTime = timeline.length ? timeline[timeline.length - 1].end - Math.min(...timeline.map(s => s.start)) : 1;
@@ -404,9 +379,6 @@ function runScheduler() {
     renderMetrics(metrics);
 }
 
-// ─────────────────────────────────────────────
-//  RENDER: GANTT CHART
-// ─────────────────────────────────────────────
 function renderGantt(timeline) {
     const chart    = document.getElementById('gantt-chart');
     const timeLine = document.getElementById('gantt-timeline');
@@ -441,7 +413,6 @@ function renderGantt(timeline) {
         chart.appendChild(block);
     });
 
-    // Timeline ticks
     const tickCount = Math.min(total, 20);
     const step = Math.ceil(total / tickCount);
     for (let t = tStart; t <= tEnd; t += step) {
@@ -451,7 +422,7 @@ function renderGantt(timeline) {
         tick.textContent = t;
         timeLine.appendChild(tick);
     }
-    // always add end tick
+
     const endTick = document.createElement('div');
     endTick.className = 'gantt-tick';
     endTick.style.left = '100%';
@@ -467,9 +438,6 @@ function clearGantt() {
     document.getElementById('gantt-algo-badge').textContent = 'No algorithm run yet';
 }
 
-// ─────────────────────────────────────────────
-//  RENDER: PROCESS TABLE
-// ─────────────────────────────────────────────
 function renderProcessTable() {
     const tbody = document.getElementById('proc-table-body');
     tbody.innerHTML = '';
@@ -493,9 +461,6 @@ function renderProcessTable() {
     document.getElementById('queue-badge').textContent = schedulerState.processes.length + ' process' + (schedulerState.processes.length !== 1 ? 'es' : '');
 }
 
-// ─────────────────────────────────────────────
-//  RENDER: METRICS TABLE
-// ─────────────────────────────────────────────
 function renderMetrics(metrics) {
     const wrap = document.getElementById('metrics-wrap');
     wrap.innerHTML = '';
@@ -526,9 +491,6 @@ function clearMetrics() {
     document.getElementById('metrics-wrap').innerHTML = '<div class="metrics-empty">Run the scheduler to see detailed metrics.</div>';
 }
 
-// ─────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────
 function addLog(text, type = 'output') {
     const output = document.getElementById('console-output');
     const line   = document.createElement('div');
