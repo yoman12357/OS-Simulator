@@ -1,0 +1,6 @@
+const $=id=>document.getElementById(id);let timers=[];function later(fn,t){timers.push(setTimeout(fn,t))}function stop(){timers.forEach(clearTimeout);timers=[]}function addLog(msg,type="info"){let [...]
+let cOwner=null;function resetCritical(){stop();cOwner=null;[1,2,3,4].forEach(i=>{let p=$('p'+i);p.dataset.active='0';setState(p,'idle')});$('lock').textContent='🔓';$('criticalText').textContent[...]
+let readers=new Set(),writer=null;function updateRW(){[1,2,3].forEach(i=>{let r=$('r'+i);r.dataset.active=readers.has(i)?'1':'0';setState(r,readers.has(i)?'allowed':'idle')});[1,2].forEach(i=>{let [...]
+let eating=new Set(),sticks=Array(5).fill(null);function left(i){return i}function right(i){return(i+1)%5}function updateDining(){for(let i=0;i<5;i++){let ph=$('ph'+i);ph.dataset.active=eating.has([...]
+let buf=[];function renderBuf(){document.querySelectorAll('#buffer span').forEach((s,i)=>s.className=i<buf.length?'full':'');$('bufCount').textContent=buf.length;$('bufStatus').textContent=buf.leng[...]
+resetCritical();resetRW();resetDining();resetPC();addLog('Simulator loaded successfully. All elements are visible and ready.','info');
