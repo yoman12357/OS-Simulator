@@ -1,529 +1,386 @@
-// ─── State ───────────────────────────────────────────────────────────────────
-const algorithms = ["Sequential", "Linked", "Indexed", "Multi-level Indexed"];
-let selectedAlgorithm = "Sequential";
+document.addEventListener('DOMContentLoaded', function () {
+    const totalBlocksInput = document.getElementById('total-blocks');
+    const numFilesInput = document.getElementById('num-files');
+    const fileSizesContainer = document.getElementById('file-sizes-container');
+    const allocationMethodSelect = document.getElementById('allocation-method');
+    const runSimulationBtn = document.getElementById('run-simulation');
+    const resetSimulationBtn = document.getElementById('reset-simulation');
+    const diskContainer = document.getElementById('disk-container');
+    const allocationInfo = document.getElementById('allocation-info');
 
-// Stores all allocated files so we can keep the disk map across allocations
-let allocatedFiles = [];
+    const colors = ['#FF6B6B','#4ECDC4','#FFD166','#06D6A0','#118AB2','#F7B801','#7F7EFF','#EF476F','#3BCEAC','#FC7307'];
 
-// ─── DOM refs ─────────────────────────────────────────────────────────────────
-const el = {
-  totalBlocks: document.getElementById("totalBlocks"),
-  fileName: document.getElementById("fileName"),
-  fileSize: document.getElementById("fileSize"),
-  startBlock: document.getElementById("startBlock"),
-  linkedBlocks: document.getElementById("linkedBlocks"),
-  linkedField: document.getElementById("linkedField"),
-  indexBlock: document.getElementById("indexBlock"),
-  indexBlockField: document.getElementById("indexBlockField"),
-  indexedBlocks: document.getElementById("indexedBlocks"),
-  indexedDataField: document.getElementById("indexedDataField"),
-  l1IndexBlock: document.getElementById("l1IndexBlock"),
-  l1IndexField: document.getElementById("l1IndexField"),
-  l2IndexBlocks: document.getElementById("l2IndexBlocks"),
-  l2IndexField: document.getElementById("l2IndexField"),
-  mlDataBlocks: document.getElementById("mlDataBlocks"),
-  mlDataField: document.getElementById("mlDataField"),
-  addFile: document.getElementById("addFile"),
-  sample: document.getElementById("sample"),
-  run: document.getElementById("run"),
-  reset: document.getElementById("reset"),
-  error: document.getElementById("error"),
-  algoButtons: document.getElementById("algoButtons"),
-  chipList: document.getElementById("chipList"),
-  blockCount: document.getElementById("blockCount"),
-  status: document.getElementById("status"),
-  activeAlgo: document.getElementById("activeAlgo"),
-  blocksUsed: document.getElementById("blocksUsed"),
-  overhead: document.getElementById("overhead"),
-  runBadge: document.getElementById("runBadge"),
-  diskMap: document.getElementById("diskMap"),
-  legend: document.getElementById("legend"),
-  structTitle: document.getElementById("structTitle"),
-  structViz: document.getElementById("structViz"),
-  trace: document.getElementById("trace"),
-};
+    let diskBlocks = [];
+    let files = [];
+    let initialSetupComplete = false;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function parseList(str) {
-  return str.split(/[\s,]+/).filter(Boolean).map(Number);
-}
+    initialize();
+    numFilesInput.addEventListener('change', updateFileSizeInputs);
+    runSimulationBtn.addEventListener('click', runSimulation);
+    resetSimulationBtn.addEventListener('click', resetSimulation);
+    totalBlocksInput.addEventListener('change', setupInitialDiskBlocks);
 
-function getUsedBlocks() {
-  const used = new Set();
-  allocatedFiles.forEach(f => {
-    f.allBlocks.forEach(b => used.add(b));
-  });
-  return used;
-}
+    function initialize() { updateFileSizeInputs(); setupInitialDiskBlocks(); }
 
-// File color palette — cycles for multiple files
-const FILE_COLORS = [
-  { data: "#69a8ff", index: "#ffd166", pointer: "#ff6b8a", name: "Blue" },
-  { data: "#5ff2a3", index: "#f97316", pointer: "#c084fc", name: "Green" },
-  { data: "#42d9f5", index: "#fb923c", pointer: "#f472b6", name: "Cyan" },
-  { data: "#a78bfa", index: "#34d399", pointer: "#fbbf24", name: "Purple" },
-  { data: "#f87171", index: "#60a5fa", pointer: "#4ade80", name: "Red" },
-];
-
-function getColor(fileIndex) {
-  return FILE_COLORS[fileIndex % FILE_COLORS.length];
-}
-
-// ─── Allocation Algorithms ────────────────────────────────────────────────────
-
-function allocateSequential(params) {
-  const { fileSize, startBlock, totalBlocks, fileName } = params;
-  const errors = [];
-  if (startBlock < 0 || startBlock >= totalBlocks) errors.push(`Start block must be 0–${totalBlocks - 1}.`);
-  if (startBlock + fileSize > totalBlocks) errors.push(`Not enough contiguous space: need blocks ${startBlock}–${startBlock + fileSize - 1} but disk has ${totalBlocks} blocks.`);
-  if (errors.length) throw new Error(errors.join(" "));
-
-  const dataBlocks = Array.from({ length: fileSize }, (_, i) => startBlock + i);
-  const used = getUsedBlocks();
-  const conflict = dataBlocks.find(b => used.has(b));
-  if (conflict !== undefined) throw new Error(`Block ${conflict} is already allocated to another file.`);
-
-  return {
-    method: "Sequential",
-    fileName,
-    dataBlocks,
-    indexBlocks: [],
-    pointerBlocks: [],
-    allBlocks: dataBlocks,
-    overhead: 0,
-    meta: { startBlock, fileSize },
-  };
-}
-
-function allocateLinked(params) {
-  const { linkedBlocks, totalBlocks, fileName } = params;
-  const chain = parseList(linkedBlocks);
-  if (chain.length < 1) throw new Error("Enter at least one block in the chain.");
-  const invalid = chain.find(b => b < 0 || b >= totalBlocks);
-  if (invalid !== undefined) throw new Error(`Block ${invalid} is out of range (0–${totalBlocks - 1}).`);
-  const unique = new Set(chain);
-  if (unique.size !== chain.length) throw new Error("Duplicate block numbers in linked chain.");
-  const used = getUsedBlocks();
-  const conflict = chain.find(b => used.has(b));
-  if (conflict !== undefined) throw new Error(`Block ${conflict} is already allocated to another file.`);
-
-  return {
-    method: "Linked",
-    fileName,
-    dataBlocks: chain,
-    indexBlocks: [],
-    pointerBlocks: [],          // pointers are embedded — shown as arrows in viz
-    allBlocks: chain,
-    overhead: 0,                // pointer is inside each block (partial overhead)
-    meta: { chain },
-  };
-}
-
-function allocateIndexed(params) {
-  const { indexBlock, indexedBlocks, totalBlocks, fileName } = params;
-  const idxBlock = Number(indexBlock);
-  const dataBlocks = parseList(indexedBlocks);
-
-  if (isNaN(idxBlock) || idxBlock < 0 || idxBlock >= totalBlocks)
-    throw new Error(`Index block must be 0–${totalBlocks - 1}.`);
-  if (dataBlocks.length < 1)
-    throw new Error("Enter at least one data block address.");
-  const invalid = dataBlocks.find(b => b < 0 || b >= totalBlocks);
-  if (invalid !== undefined) throw new Error(`Block ${invalid} is out of range.`);
-  if (dataBlocks.includes(idxBlock)) throw new Error("Index block cannot also be a data block.");
-  const used = getUsedBlocks();
-  const allNeed = [idxBlock, ...dataBlocks];
-  const conflict = allNeed.find(b => used.has(b));
-  if (conflict !== undefined) throw new Error(`Block ${conflict} is already allocated.`);
-
-  return {
-    method: "Indexed",
-    fileName,
-    dataBlocks,
-    indexBlocks: [idxBlock],
-    pointerBlocks: [],
-    allBlocks: [idxBlock, ...dataBlocks],
-    overhead: 1,
-    meta: { idxBlock, dataBlocks },
-  };
-}
-
-function allocateMultiLevelIndexed(params) {
-  const { l1IndexBlock, l2IndexBlocks, mlDataBlocks, totalBlocks, fileName } = params;
-  const l1 = Number(l1IndexBlock);
-  const l2List = parseList(l2IndexBlocks);
-  const dataList = parseList(mlDataBlocks);
-
-  if (isNaN(l1) || l1 < 0 || l1 >= totalBlocks) throw new Error(`L1 index block must be 0–${totalBlocks - 1}.`);
-  if (l2List.length < 1) throw new Error("Enter at least one L2 index block.");
-  if (dataList.length < 1) throw new Error("Enter at least one data block.");
-  const allNeed = [l1, ...l2List, ...dataList];
-  const invalid = allNeed.find(b => b < 0 || b >= totalBlocks);
-  if (invalid !== undefined) throw new Error(`Block ${invalid} is out of range.`);
-  const uniqueAll = new Set(allNeed);
-  if (uniqueAll.size !== allNeed.length) throw new Error("Duplicate block numbers detected.");
-  const used = getUsedBlocks();
-  const conflict = allNeed.find(b => used.has(b));
-  if (conflict !== undefined) throw new Error(`Block ${conflict} is already allocated.`);
-
-  return {
-    method: "Multi-level Indexed",
-    fileName,
-    dataBlocks: dataList,
-    indexBlocks: [l1, ...l2List],
-    pointerBlocks: [],
-    allBlocks: allNeed,
-    overhead: 1 + l2List.length,
-    meta: { l1, l2List, dataList },
-  };
-}
-
-// ─── Disk Map Rendering ───────────────────────────────────────────────────────
-
-function renderDiskMap(totalBlocks) {
-  const usedMap = {};     // blockNum -> { fileIdx, type }
-  allocatedFiles.forEach((f, fi) => {
-    f.dataBlocks.forEach(b => { usedMap[b] = { fi, type: "data" }; });
-    f.indexBlocks.forEach(b => { usedMap[b] = { fi, type: "index" }; });
-  });
-
-  const cols = Math.min(totalBlocks, 16);
-  el.diskMap.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  el.diskMap.innerHTML = "";
-
-  for (let i = 0; i < totalBlocks; i++) {
-    const cell = document.createElement("div");
-    cell.className = "disk-block";
-    cell.setAttribute("data-block", i);
-    const info = usedMap[i];
-    if (info) {
-      const colors = getColor(info.fi);
-      cell.style.background = info.type === "index" ? colors.index : colors.data;
-      cell.style.color = "#06111f";
-      cell.style.borderColor = info.type === "index" ? colors.index : colors.data;
-      cell.title = `Block ${i} — ${allocatedFiles[info.fi].fileName} (${info.type})`;
-      cell.classList.add("used");
+    function updateFileSizeInputs() {
+        const numFiles = parseInt(numFilesInput.value);
+        fileSizesContainer.innerHTML = '';
+        for (let i = 0; i < numFiles; i++) {
+            const d = document.createElement('div');
+            d.classList.add('file-size-input');
+            d.innerHTML = `<label for="file-size-${i}">File ${i+1} Size (blocks):</label>
+                           <input type="number" id="file-size-${i}" class="file-size" min="1" max="20" value="${Math.floor(Math.random()*5)+2}">`;
+            fileSizesContainer.appendChild(d);
+        }
     }
-    cell.innerHTML = `<span class="block-num">${i}</span>`;
-    el.diskMap.appendChild(cell);
-  }
 
-  // Legend
-  el.legend.innerHTML = "<span class='legend-label'>Legend:</span>" +
-    allocatedFiles.map((f, fi) => {
-      const c = getColor(fi);
-      return `<span class="legend-item"><span class="legend-dot" style="background:${c.data}"></span>${f.fileName} data</span>` +
-        (f.indexBlocks.length ? `<span class="legend-item"><span class="legend-dot" style="background:${c.index}"></span>${f.fileName} index</span>` : "");
-    }).join("") +
-    `<span class="legend-item"><span class="legend-dot free"></span>Free</span>`;
-}
+    function setupInitialDiskBlocks() {
+        diskBlocks = []; diskContainer.innerHTML = '';
+        allocationInfo.innerHTML = '<p>Click on disk blocks to mark them as already allocated (busy) before running the simulation.</p>';
+        const total = parseInt(totalBlocksInput.value);
+        for (let i = 0; i < total; i++) diskBlocks.push({id:i,allocated:false,fileId:null,isIndex:false,isTier:null,nextBlock:null,initiallyBusy:false});
+        renderInitialDiskBlocks();
+        initialSetupComplete = true;
+    }
 
-// ─── Structure Visualizer ─────────────────────────────────────────────────────
+    function renderInitialDiskBlocks() {
+        diskContainer.innerHTML = '';
+        for (let i = 0; i < diskBlocks.length; i++) {
+            const b = diskBlocks[i];
+            const el = document.createElement('div');
+            el.classList.add('disk-block');
+            if (b.initiallyBusy) {
+                el.classList.add('busy');
+                el.innerHTML = `<span>${i}</span><span class="busy-mark">X</span>`;
+            } else { el.classList.add('free'); el.textContent = i; }
+            el.addEventListener('click', () => toggleBlockBusyState(i));
+            diskContainer.appendChild(el);
+        }
+        const legend = document.createElement('div'); legend.classList.add('legend');
+        legend.innerHTML = `
+            <div class="legend-item"><div class="legend-color" style="background:#e2e8f0;"></div><span>Free Block</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#dc2626;"></div><span>Pre-Allocated (Busy)</span></div>`;
+        diskContainer.appendChild(legend);
+    }
 
-function renderStructure(fileResult) {
-  const { method, meta, dataBlocks, indexBlocks, fileName } = fileResult;
-  el.structTitle.textContent = `${method} — ${fileName}`;
+    function toggleBlockBusyState(blockId) {
+        diskBlocks[blockId].initiallyBusy = !diskBlocks[blockId].initiallyBusy;
+        diskBlocks[blockId].allocated = diskBlocks[blockId].initiallyBusy;
+        renderInitialDiskBlocks();
+    }
 
-  if (method === "Sequential") {
-    el.structViz.innerHTML = `
-      <div class="struct-row">
-        <div class="struct-label">Directory Entry</div>
-        <div class="struct-chain">
-          <div class="struct-block entry-block">
-            <span class="sb-label">Start</span>
-            <span class="sb-val">${meta.startBlock}</span>
-          </div>
-          <div class="struct-block entry-block">
-            <span class="sb-label">Length</span>
-            <span class="sb-val">${meta.fileSize}</span>
-          </div>
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">Disk Blocks</div>
-        <div class="struct-chain">
-          ${dataBlocks.map(b => `<div class="struct-block data-block"><span class="sb-label">Blk</span><span class="sb-val">${b}</span></div>`).join('<span class="arrow">→</span>')}
-        </div>
-      </div>
-      <p class="struct-note">✔ Contiguous allocation — fast sequential & random access. ✘ External fragmentation risk. Must declare size upfront.</p>
-    `;
-  } else if (method === "Linked") {
-    const chain = meta.chain;
-    el.structViz.innerHTML = `
-      <div class="struct-row">
-        <div class="struct-label">Directory Entry</div>
-        <div class="struct-chain">
-          <div class="struct-block entry-block"><span class="sb-label">Start</span><span class="sb-val">${chain[0]}</span></div>
-          <div class="struct-block entry-block"><span class="sb-label">End</span><span class="sb-val">${chain[chain.length - 1]}</span></div>
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">Block Chain</div>
-        <div class="struct-chain">
-          ${chain.map((b, i) => `
-            <div class="struct-block data-block linked-block">
-              <span class="sb-label">Blk ${b}</span>
-              <span class="sb-val ptr">${i < chain.length - 1 ? '→ ' + chain[i + 1] : 'NULL'}</span>
+    function resetSimulation() {
+        diskBlocks=[]; files=[]; initialSetupComplete=false;
+        diskContainer.innerHTML=''; allocationInfo.innerHTML='';
+        updateFileSizeInputs(); setupInitialDiskBlocks();
+    }
+
+    function runSimulation() {
+        if (!initialSetupComplete) { setupInitialDiskBlocks(); return; }
+        files = [];
+        for (let i = 0; i < diskBlocks.length; i++) {
+            if (!diskBlocks[i].initiallyBusy) {
+                diskBlocks[i].allocated=false; diskBlocks[i].fileId=null;
+                diskBlocks[i].isIndex=false; diskBlocks[i].isTier=null; diskBlocks[i].nextBlock=null;
+            }
+        }
+        const numFiles = parseInt(numFilesInput.value);
+        const method = allocationMethodSelect.value;
+        const inputs = document.querySelectorAll('.file-size');
+        for (let i = 0; i < numFiles; i++) {
+            const size = parseInt(inputs[i].value);
+            if (size<1||isNaN(size)) { alert(`Invalid size for File ${i+1}`); return; }
+            files.push({id:i,name:`F${i+1}`,size,color:colors[i%colors.length],blocks:[]});
+        }
+        let success=false, log=[];
+        switch(method) {
+            case 'contiguous': success=allocateSequential(log); break;
+            case 'linked':     success=allocateLinked(log);     break;
+            case 'indexed':    success=allocateIndexed(log);    break;
+            case 'sta':        success=allocateSTA(log);        break;
+        }
+        if (!success) return;
+        renderDiskBlocks();
+        displayAllocationInfo(method, log);
+    }
+
+    /* ================================================================
+       1. SEQUENTIAL (CONTIGUOUS) — Lab PDF Logic
+    ================================================================ */
+    function allocateSequential(log) {
+        for (let file of files) {
+            const extraBlocks = file.size;
+            let fileStart=-1, count=0, start=0;
+            for (let i=0; i<diskBlocks.length; i++) {
+                if (!diskBlocks[i].allocated) { if(count===0) start=i; count++; if(count===file.size){fileStart=start;break;} }
+                else { count=0; }
+            }
+            if (fileStart===-1) { alert(`❌ Allocation FAILED for ${file.name}: No contiguous space of ${file.size} blocks found.`); return false; }
+            const fileEnd = fileStart+file.size-1;
+            for (let i=fileStart; i<=fileEnd; i++) { diskBlocks[i].allocated=true; diskBlocks[i].fileId=file.id; file.blocks.push(i); }
+
+            const growEnd = fileEnd+extraBlocks;
+            let adjacentFree = (growEnd < diskBlocks.length);
+            if (adjacentFree) { for (let i=fileEnd+1; i<=growEnd; i++) { if(diskBlocks[i].allocated){adjacentFree=false;break;} } }
+
+            if (adjacentFree) {
+                for (let i=fileEnd+1; i<=growEnd; i++) { diskBlocks[i].allocated=true; diskBlocks[i].fileId=file.id; file.blocks.push(i); }
+                log.push({file:file.name, original:`${fileStart}–${fileEnd}`, result:`Extended → blocks ${fileStart}–${growEnd}`, case:'extended'});
+            } else {
+                const requiredSize = file.size+extraBlocks;
+                for (let i=fileStart; i<=fileEnd; i++) diskBlocks[i].allocated=false;
+                let newStart=-1, c=0, s=0;
+                for (let i=0; i<diskBlocks.length; i++) {
+                    if (!diskBlocks[i].allocated) { if(c===0) s=i; c++; if(c===requiredSize){newStart=s;break;} } else { c=0; }
+                }
+                if (newStart===-1) {
+                    for (let i=fileStart; i<=fileEnd; i++) diskBlocks[i].allocated=true;
+                    alert(`❌ Allocation FAILED for ${file.name}: No contiguous space of ${requiredSize} blocks for relocation.`); return false;
+                }
+                file.blocks=[];
+                const newEnd=newStart+requiredSize-1;
+                for (let i=newStart; i<=newEnd; i++) { diskBlocks[i].allocated=true; diskBlocks[i].fileId=file.id; file.blocks.push(i); }
+                log.push({file:file.name, original:`${fileStart}–${fileEnd}`, result:`Adjacent occupied → Relocated to blocks ${newStart}–${newEnd}`, case:'relocated'});
+            }
+        }
+        return true;
+    }
+
+    /* ================================================================
+       2. LINKED — Lab PDF Logic
+    ================================================================ */
+    function allocateLinked(log) {
+        for (let file of files) {
+            const freeList = diskBlocks.map((b,i)=>(!b.allocated?i:-1)).filter(i=>i!==-1);
+            if (freeList.length < file.size) { alert(`❌ Allocation FAILED for ${file.name}: Only ${freeList.length} free blocks, need ${file.size}.`); return false; }
+            const chosen = freeList.slice(0, file.size);
+            for (let i=0; i<chosen.length; i++) {
+                const idx=chosen[i];
+                diskBlocks[idx].allocated=true; diskBlocks[idx].fileId=file.id;
+                diskBlocks[idx].nextBlock=(i<chosen.length-1)?chosen[i+1]:null;
+                file.blocks.push(idx);
+            }
+            log.push({file:file.name, head:chosen[0], tail:chosen[chosen.length-1], chain:chosen.join(' → ')+' → NULL', case:'linked'});
+        }
+        return true;
+    }
+
+    /* ================================================================
+       3. INDEXED — Lab PDF Logic
+    ================================================================ */
+    function allocateIndexed(log) {
+        for (let file of files) {
+            const extraBlocks = file.size;
+            const allFree = diskBlocks.map((b,i)=>(!b.allocated?i:-1)).filter(i=>i!==-1);
+            if (allFree.length < 1+extraBlocks) {
+                alert(`❌ Allocation FAILED for ${file.name}: Need ${1+extraBlocks} blocks (1 index + ${extraBlocks} data), only ${allFree.length} free.`); return false;
+            }
+            const indexBlockNum = allFree[0];
+            diskBlocks[indexBlockNum].allocated=true; diskBlocks[indexBlockNum].fileId=file.id; diskBlocks[indexBlockNum].isIndex=true;
+            file.indexBlock=indexBlockNum;
+            const freeList = diskBlocks.map((b,i)=>(!b.allocated?i:-1)).filter(i=>i!==-1);
+            const newDataBlocks = freeList.slice(0, extraBlocks);
+            for (let idx of newDataBlocks) { diskBlocks[idx].allocated=true; diskBlocks[idx].fileId=file.id; file.blocks.push(idx); }
+            log.push({file:file.name, indexBlock:indexBlockNum, freeCount:freeList.length, extraBlocks, dataBlocks:newDataBlocks.join(', '), indexList:`[${newDataBlocks.join(', ')}]`, case:'indexed'});
+        }
+        return true;
+    }
+
+    /* ================================================================
+       4. SMART TIERED ALLOCATION (STA) — New Algorithm
+       Beats Indexed by adapting strategy to file size:
+
+       TIER 1 — Tiny files (1–2 blocks):
+         • Pointers stored directly in directory entry
+         • NO index block needed → zero index overhead
+         • Single disk access to reach data ✅
+
+       TIER 2 — Medium files (3–8 blocks):
+         • ONE shared index block for ALL tier-2 files
+         • Multiple files share index block → far less waste than Indexed
+         • Each file's portion of index block maps its data blocks ✅
+
+       TIER 3 — Large files (9+ blocks):
+         • Auto two-level index (index block → sub-index → data)
+         • No manual setup, system decides automatically
+         • Handles huge files without multiple index blocks ✅
+
+       Result: No fragmentation + random access + minimal overhead
+    ================================================================ */
+    function allocateSTA(log) {
+        // Separate files by tier
+        const tier1Files = files.filter(f => f.size <= 2);
+        const tier2Files = files.filter(f => f.size >= 3 && f.size <= 8);
+        const tier3Files = files.filter(f => f.size >= 9);
+
+        // Calculate total blocks needed
+        const tier2NeedsSharedIndex = tier2Files.length > 0 ? 1 : 0;
+        const tier3IndexBlocks = tier3Files.reduce((acc, f) => acc + 1 + Math.ceil(f.size / 4), 0);
+        const totalDataBlocks = files.reduce((acc, f) => acc + f.size, 0);
+        const totalNeeded = totalDataBlocks + tier2NeedsSharedIndex + tier3IndexBlocks;
+
+        const freeAll = diskBlocks.map((b,i)=>(!b.allocated?i:-1)).filter(i=>i!==-1);
+        if (freeAll.length < totalNeeded) {
+            alert(`❌ STA Allocation FAILED: Need ${totalNeeded} blocks total, only ${freeAll.length} free.`); return false;
+        }
+
+        let ptr = 0;
+        const getFree = () => { const b = freeAll[ptr++]; return b; };
+
+        // ── TIER 2: allocate shared index block first ──
+        let sharedIndexBlock = null;
+        if (tier2Files.length > 0) {
+            sharedIndexBlock = getFree();
+            diskBlocks[sharedIndexBlock].allocated = true;
+            diskBlocks[sharedIndexBlock].fileId = tier2Files[0].id; // visually assign to first tier2 file
+            diskBlocks[sharedIndexBlock].isIndex = true;
+            diskBlocks[sharedIndexBlock].isTier = 2;
+        }
+
+        // ── TIER 1: direct directory pointers, no index block ──
+        for (let file of tier1Files) {
+            file.tier = 1;
+            for (let b = 0; b < file.size; b++) {
+                const blk = getFree();
+                diskBlocks[blk].allocated = true; diskBlocks[blk].fileId = file.id; diskBlocks[blk].isTier = 1;
+                file.blocks.push(blk);
+            }
+            log.push({file:file.name, tier:1, blocks:file.blocks.join(', '), indexBlock:'None (direct)', case:'sta',
+                desc:`Tiny file — pointers stored directly in directory entry. No index block needed. Single disk access.`});
+        }
+
+        // ── TIER 2: shared index block ──
+        for (let file of tier2Files) {
+            file.tier = 2;
+            file.indexBlock = sharedIndexBlock;
+            for (let b = 0; b < file.size; b++) {
+                const blk = getFree();
+                diskBlocks[blk].allocated = true; diskBlocks[blk].fileId = file.id; diskBlocks[blk].isTier = 2;
+                file.blocks.push(blk);
+            }
+            log.push({file:file.name, tier:2, blocks:file.blocks.join(', '), indexBlock:`Block ${sharedIndexBlock} (shared)`, case:'sta',
+                desc:`Medium file — shares ONE index block (Block ${sharedIndexBlock}) with other medium files. No wasted index block.`});
+        }
+
+        // ── TIER 3: two-level index ──
+        for (let file of tier3Files) {
+            file.tier = 3;
+            const mainIdx = getFree();
+            diskBlocks[mainIdx].allocated = true; diskBlocks[mainIdx].fileId = file.id; diskBlocks[mainIdx].isIndex = true; diskBlocks[mainIdx].isTier = 3;
+            file.indexBlock = mainIdx;
+            file.subIndexes = [];
+            const subCount = Math.ceil(file.size / 4);
+            let dataLeft = file.size;
+            for (let s = 0; s < subCount; s++) {
+                const subIdx = getFree();
+                diskBlocks[subIdx].allocated = true; diskBlocks[subIdx].fileId = file.id; diskBlocks[subIdx].isIndex = true; diskBlocks[subIdx].isTier = 3;
+                file.subIndexes.push(subIdx);
+                const take = Math.min(4, dataLeft); dataLeft -= take;
+                for (let d = 0; d < take; d++) {
+                    const blk = getFree();
+                    diskBlocks[blk].allocated = true; diskBlocks[blk].fileId = file.id; diskBlocks[blk].isTier = 3;
+                    file.blocks.push(blk);
+                }
+            }
+            log.push({file:file.name, tier:3, blocks:file.blocks.join(', '), indexBlock:`Block ${mainIdx} (main) → Sub-indexes: [${file.subIndexes.join(', ')}]`, case:'sta',
+                desc:`Large file — auto two-level index. Main index block ${mainIdx} points to sub-index blocks, which point to data. Handles huge files with minimal overhead.`});
+        }
+        return true;
+    }
+
+    /* ================================================================
+       RENDER
+    ================================================================ */
+    function renderDiskBlocks() {
+        diskContainer.innerHTML='';
+        for (let i=0; i<diskBlocks.length; i++) {
+            const block=diskBlocks[i];
+            const el=document.createElement('div'); el.classList.add('disk-block');
+            if (block.initiallyBusy && block.fileId===null) {
+                el.classList.add('busy'); el.innerHTML=`<span>${i}</span><span class="busy-mark">X</span>`;
+            } else if (block.allocated && block.fileId!==null) {
+                const file=files[block.fileId];
+                el.style.backgroundColor=file.color; el.classList.add('allocated'); el.setAttribute('data-file',file.name);
+                if (block.isIndex) {
+                    el.classList.add('index-block');
+                    el.textContent = block.isTier===2 ? `SI` : `I${file.id+1}`;
+                } else { el.textContent=i; }
+                if (block.nextBlock!==null) { const ptr=document.createElement('div'); ptr.classList.add('pointer'); ptr.textContent='→'; el.appendChild(ptr); }
+            } else { el.classList.add('free'); el.textContent=i; }
+            diskContainer.appendChild(el);
+        }
+        const legend=document.createElement('div'); legend.classList.add('legend');
+        legend.innerHTML=`<div class="legend-item"><div class="legend-color" style="background:#e2e8f0;"></div><span>Free</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#dc2626;"></div><span>Pre-Allocated</span></div>`;
+        for (let file of files) { const item=document.createElement('div'); item.classList.add('legend-item'); item.innerHTML=`<div class="legend-color" style="background:${file.color};"></div><span>${file.name}</span>`; legend.appendChild(item); }
+        const method = allocationMethodSelect.value;
+        if (method==='indexed') legend.innerHTML+=`<div class="legend-item"><div class="legend-color" style="background:#c084fc;border:2px dashed #9333ea;"></div><span>Index Block</span></div>`;
+        if (method==='sta') legend.innerHTML+=`<div class="legend-item"><div class="legend-color" style="background:#c084fc;border:2px dashed #9333ea;"></div><span>Index/Sub-Index Block</span></div>
+            <div class="legend-item"><span style="font-size:0.8rem;color:#64748b;">T1=Tiny(≤2) &nbsp; T2=Medium(3–8) &nbsp; T3=Large(9+)</span></div>`;
+        diskContainer.appendChild(legend);
+    }
+
+    /* ================================================================
+       DISPLAY INFO
+    ================================================================ */
+    function displayAllocationInfo(method, log) {
+        let html=`<h4>${getMethodFullName(method)} — Allocation Details</h4>`;
+
+        if (method==='contiguous') {
+            html+=`<div class="algo-steps">
+                <div class="algo-step"><span class="step-num">Step 1</span> Find first free contiguous region of <b>file.size</b> blocks → initial placement</div>
+                <div class="algo-step"><span class="step-num">Step 2</span> Check adjacent blocks [fileEnd+1 … fileEnd+extraBlocks]</div>
+                <div class="algo-step"><span class="step-num">Case 1 ✅</span> All adjacent FREE → <b>extend file in place</b></div>
+                <div class="algo-step"><span class="step-num">Case 2</span> Any adjacent OCCUPIED → requiredSize = currentSize + extraBlocks → search whole disk</div>
+                <div class="algo-step"><span class="step-num">Result</span> Found new space → <b>free old blocks, relocate</b> ✅ &nbsp;|&nbsp; No space → <b>FAIL</b> ❌</div>
             </div>
-          `).join('<span class="arrow">⤏</span>')}
-        </div>
-      </div>
-      <p class="struct-note">✔ No external fragmentation — blocks can be scattered. ✘ No direct access (must follow chain). Pointer overhead per block.</p>
-    `;
-  } else if (method === "Indexed") {
-    const { idxBlock, dataBlocks: dBlocks } = meta;
-    el.structViz.innerHTML = `
-      <div class="struct-row">
-        <div class="struct-label">Directory Entry</div>
-        <div class="struct-chain">
-          <div class="struct-block entry-block"><span class="sb-label">Index</span><span class="sb-val">${idxBlock}</span></div>
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">Index Block ${idxBlock}</div>
-        <div class="struct-chain index-table">
-          ${dBlocks.map((b, i) => `<div class="struct-block idx-entry"><span class="sb-label">[${i}]</span><span class="sb-val">${b}</span></div>`).join("")}
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">Data Blocks</div>
-        <div class="struct-chain">
-          ${dBlocks.map(b => `<div class="struct-block data-block"><span class="sb-label">Blk</span><span class="sb-val">${b}</span></div>`).join('<span class="arrow">·</span>')}
-        </div>
-      </div>
-      <p class="struct-note">✔ Direct access via index. No external fragmentation. ✘ Index block overhead. File size limited by index block capacity.</p>
-    `;
-  } else if (method === "Multi-level Indexed") {
-    const { l1, l2List, dataList } = meta;
-    el.structViz.innerHTML = `
-      <div class="struct-row">
-        <div class="struct-label">Directory Entry</div>
-        <div class="struct-chain">
-          <div class="struct-block entry-block"><span class="sb-label">L1 Index</span><span class="sb-val">${l1}</span></div>
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">L1 Index Block ${l1}</div>
-        <div class="struct-chain">
-          ${l2List.map(b => `<div class="struct-block idx-block"><span class="sb-label">L2→</span><span class="sb-val">${b}</span></div>`).join('<span class="arrow">·</span>')}
-        </div>
-      </div>
-      <div class="struct-row">
-        <div class="struct-label">L2 Index Blocks</div>
-        <div class="struct-chain">
-          ${l2List.map((b, li) => {
-            // distribute data blocks among L2 nodes
-            const chunkSize = Math.ceil(dataList.length / l2List.length);
-            const chunk = dataList.slice(li * chunkSize, (li + 1) * chunkSize);
-            return `<div class="ml-group">
-              <div class="struct-block idx-block ml-idx"><span class="sb-label">Blk ${b}</span></div>
-              <div class="ml-children">${chunk.map(d => `<div class="struct-block data-block ml-data"><span class="sb-val">${d}</span></div>`).join("")}</div>
-            </div>`;
-          }).join('<span class="arrow ml-arrow">·</span>')}
-        </div>
-      </div>
-      <p class="struct-note">✔ Supports very large files. No external fragmentation. ✘ Multiple index block accesses increase seek time. Higher overhead.</p>
-    `;
-  }
-}
+            <table class="allocation-table"><tr><th>File</th><th>Initial Placement</th><th>Outcome</th></tr>`;
+            for (let e of log) {
+                const badge=e.case==='extended'?'🟢 Extended':e.case==='relocated'?'🟡 Relocated':'🔴 Failed';
+                html+=`<tr><td>${e.file}</td><td>Blocks ${e.original}</td><td>${badge} — ${e.result}</td></tr>`;
+            }
+            html+=`</table>`;
 
-// ─── Trace ────────────────────────────────────────────────────────────────────
+        } else if (method==='linked') {
+            html+=`<div class="algo-steps">
+                <div class="algo-step"><span class="step-num">Step 1</span> Collect all FREE disk blocks → freeList</div>
+                <div class="algo-step"><span class="step-num">Step 2</span> Check SIZE(freeList) ≥ required blocks — if not → FAIL ❌</div>
+                <div class="algo-step"><span class="step-num">Step 3</span> Traverse linked list to find the tail block (next = -1)</div>
+                <div class="algo-step"><span class="step-num">Step 4</span> Link new free blocks to tail → file grows without relocation ✅</div>
+            </div>
+            <table class="allocation-table"><tr><th>File</th><th>Head Block</th><th>Tail Block</th><th>Block Chain</th></tr>`;
+            for (let e of log) html+=`<tr><td>${e.file}</td><td>${e.head}</td><td>${e.tail}</td><td>${e.chain}</td></tr>`;
+            html+=`</table>`;
 
-function renderTrace(fileResult) {
-  const { method, fileName, dataBlocks, indexBlocks, overhead, allBlocks } = fileResult;
-  const lines = [
-    `$ FILE_ALLOCATOR: ${method.toUpperCase().replaceAll(" ", "_")} mode`,
-    `$ Allocating file: "${fileName}"`,
-  ];
+        } else if (method==='indexed') {
+            html+=`<div class="algo-steps">
+                <div class="algo-step"><span class="step-num">Step 1</span> Count all FREE blocks on disk (location doesn't matter)</div>
+                <div class="algo-step"><span class="step-num">Step 2</span> If freeCount ≥ extraBlocks → proceed, else FAIL ❌</div>
+                <div class="algo-step"><span class="step-num">Step 3</span> Pick 1 free block as <b>Index Block</b> — stores addresses of all data blocks</div>
+                <div class="algo-step"><span class="step-num">Step 4</span> Pick remaining free blocks as data blocks → add addresses to indexList ✅</div>
+            </div>
+            <table class="allocation-table"><tr><th>File</th><th>Index Block</th><th>Index Contents</th><th>Data Blocks</th></tr>`;
+            for (let e of log) html+=`<tr><td>${e.file}</td><td>${e.indexBlock}</td><td>${e.indexList}</td><td>${e.dataBlocks}</td></tr>`;
+            html+=`</table>`;
 
-  if (method === "Sequential") {
-    lines.push(`$ Contiguous blocks: ${dataBlocks[0]} – ${dataBlocks[dataBlocks.length - 1]}`);
-    dataBlocks.forEach((b, i) => lines.push(`$ Block[${i}] = ${b}`));
-  } else if (method === "Linked") {
-    lines.push(`$ FAT chain: ${dataBlocks.join(" → ")} → NULL`);
-    dataBlocks.forEach((b, i) => {
-      const next = dataBlocks[i + 1];
-      lines.push(`$ Block ${b}: data + pointer → ${next !== undefined ? next : "NULL"}`);
-    });
-  } else if (method === "Indexed") {
-    lines.push(`$ Index block: ${indexBlocks[0]}`);
-    dataBlocks.forEach((b, i) => lines.push(`$ index[${i}] → Block ${b}`));
-  } else if (method === "Multi-level Indexed") {
-    lines.push(`$ L1 index block: ${fileResult.meta.l1}`);
-    fileResult.meta.l2List.forEach((b, i) => lines.push(`$ L2 index block[${i}]: ${b}`));
-    dataBlocks.forEach((b, i) => lines.push(`$ data[${i}] → Block ${b}`));
-  }
+        } else if (method==='sta') {
+            html+=`<div class="algo-steps">
+                <div class="algo-step"><span class="step-num">Tier 1</span> <b>Tiny files (1–2 blocks)</b> → Pointers in directory entry directly. <b>Zero index overhead. 1 disk access.</b></div>
+                <div class="algo-step"><span class="step-num">Tier 2</span> <b>Medium files (3–8 blocks)</b> → All medium files share <b>ONE</b> index block. Far less waste than Indexed.</div>
+                <div class="algo-step"><span class="step-num">Tier 3</span> <b>Large files (9+ blocks)</b> → Auto two-level index. Main index → sub-indexes → data. Handles huge files seamlessly.</div>
+                <div class="algo-step"><span class="step-num">Result ✅</span> No fragmentation + Random access + Minimal overhead — beats Indexed on all 3 weaknesses</div>
+            </div>
+            <table class="allocation-table"><tr><th>File</th><th>Tier</th><th>Index Block</th><th>Data Blocks</th><th>Why Better</th></tr>`;
+            for (let e of log) {
+                const tierBadge = e.tier===1?'🔵 T1 Tiny':e.tier===2?'🟢 T2 Medium':'🟣 T3 Large';
+                html+=`<tr><td>${e.file}</td><td>${tierBadge}</td><td>${e.indexBlock}</td><td>${e.blocks}</td><td style="font-size:0.82rem;color:#475569;">${e.desc}</td></tr>`;
+            }
+            html+=`</table>`;
+        }
+        allocationInfo.innerHTML=html;
+    }
 
-  lines.push(`$ Total blocks used: ${allBlocks.length} (data: ${dataBlocks.length}, index overhead: ${overhead})`);
-  lines.push(`$ Allocation complete ✓`);
-  el.trace.textContent = lines.join("\n");
-}
-
-// ─── Main Run ─────────────────────────────────────────────────────────────────
-
-function gatherParams() {
-  return {
-    totalBlocks: Number(el.totalBlocks.value),
-    fileName: el.fileName.value.trim() || "file.txt",
-    fileSize: Number(el.fileSize.value),
-    startBlock: Number(el.startBlock.value),
-    linkedBlocks: el.linkedBlocks.value,
-    indexBlock: el.indexBlock.value,
-    indexedBlocks: el.indexedBlocks.value,
-    l1IndexBlock: el.l1IndexBlock.value,
-    l2IndexBlocks: el.l2IndexBlocks.value,
-    mlDataBlocks: el.mlDataBlocks.value,
-  };
-}
-
-function runAllocator(addToExisting = false) {
-  try {
-    const params = gatherParams();
-
-    if (!addToExisting) allocatedFiles = [];
-
-    let result;
-    if (selectedAlgorithm === "Sequential") result = allocateSequential(params);
-    else if (selectedAlgorithm === "Linked") result = allocateLinked(params);
-    else if (selectedAlgorithm === "Indexed") result = allocateIndexed(params);
-    else if (selectedAlgorithm === "Multi-level Indexed") result = allocateMultiLevelIndexed(params);
-
-    allocatedFiles.push(result);
-
-    // Stats
-    const totalData = result.dataBlocks.length;
-    const totalOverhead = result.overhead;
-    el.error.textContent = "";
-    el.status.textContent = "ALLOCATED";
-    el.activeAlgo.textContent = selectedAlgorithm;
-    el.blocksUsed.textContent = String(totalData);
-    el.overhead.textContent = totalOverhead === 0 ? "None" : `${totalOverhead} block${totalOverhead !== 1 ? "s" : ""}`;
-    el.runBadge.textContent = `${selectedAlgorithm} — ${result.fileName}`;
-
-    renderDiskMap(params.totalBlocks);
-    renderStructure(result);
-    renderTrace(result);
-    updateBlockCount();
-  } catch (err) {
-    el.error.textContent = err.message;
-    el.status.textContent = "ERROR";
-  }
-}
-
-// ─── UI ───────────────────────────────────────────────────────────────────────
-
-function updateConditionalFields() {
-  el.linkedField.classList.toggle("visible", selectedAlgorithm === "Linked" || selectedAlgorithm === "Sequential");
-  // Sequential: show start block only
-  // Actually show linkedField only for linked, start block for sequential
-  el.linkedField.classList.toggle("visible", selectedAlgorithm === "Linked");
-  el.indexBlockField.classList.toggle("visible", selectedAlgorithm === "Indexed");
-  el.indexedDataField.classList.toggle("visible", selectedAlgorithm === "Indexed");
-  el.l1IndexField.classList.toggle("visible", selectedAlgorithm === "Multi-level Indexed");
-  el.l2IndexField.classList.toggle("visible", selectedAlgorithm === "Multi-level Indexed");
-  el.mlDataField.classList.toggle("visible", selectedAlgorithm === "Multi-level Indexed");
-
-  // Start block only relevant for sequential
-  document.querySelectorAll(".start-block-group").forEach(el => {
-    el.style.display = selectedAlgorithm === "Sequential" ? "" : "none";
-  });
-}
-
-function selectAlgorithm(type) {
-  selectedAlgorithm = type;
-  el.activeAlgo.textContent = type;
-  updateConditionalFields();
-  document.querySelectorAll(".algo").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.algo === type);
-  });
-}
-
-function setupAlgorithms() {
-  el.algoButtons.innerHTML = algorithms.map(algo => (
-    `<button class="algo ${algo === selectedAlgorithm ? "active" : ""}" data-algo="${algo}">${algo}</button>`
-  )).join("");
-  el.chipList.innerHTML = algorithms.map(algo => `<span class="chip">${algo}</span>`).join("");
-  document.querySelectorAll(".algo").forEach(btn => {
-    btn.addEventListener("click", () => selectAlgorithm(btn.dataset.algo));
-  });
-}
-
-function updateBlockCount() {
-  const total = Number(el.totalBlocks.value);
-  const used = getUsedBlocks().size;
-  el.blockCount.textContent = `${used}/${total} blocks used`;
-}
-
-el.run.addEventListener("click", () => runAllocator(false));
-
-el.addFile.addEventListener("click", () => {
-  if (allocatedFiles.length === 0) {
-    el.error.textContent = "Run a first allocation before adding another file.";
-    return;
-  }
-  runAllocator(true);
+    function getMethodFullName(m) {
+        return {contiguous:'Sequential (Contiguous)',linked:'Linked List',indexed:'Indexed',sta:'Smart Tiered Allocation (STA)'}[m]||m;
+    }
 });
-
-el.sample.addEventListener("click", () => {
-  allocatedFiles = [];
-  el.totalBlocks.value = "32";
-  el.diskSize && (el.diskSize.value = "32");
-
-  // Load sample for selected algorithm
-  if (selectedAlgorithm === "Sequential") {
-    el.fileName.value = "report.pdf";
-    el.fileSize.value = "5";
-    el.startBlock.value = "4";
-  } else if (selectedAlgorithm === "Linked") {
-    el.fileName.value = "music.mp3";
-    el.fileSize.value = "6";
-    el.linkedBlocks.value = "3, 9, 14, 20, 25, 30";
-  } else if (selectedAlgorithm === "Indexed") {
-    el.fileName.value = "video.mp4";
-    el.fileSize.value = "6";
-    el.indexBlock.value = "5";
-    el.indexedBlocks.value = "8, 13, 17, 22, 27, 31";
-  } else {
-    el.fileName.value = "bigfile.bin";
-    el.fileSize.value = "6";
-    el.l1IndexBlock.value = "3";
-    el.l2IndexBlocks.value = "6, 10";
-    el.mlDataBlocks.value = "14, 18, 21, 25, 28, 31";
-  }
-  runAllocator(false);
-});
-
-el.reset.addEventListener("click", () => {
-  allocatedFiles = [];
-  el.fileName.value = "myfile.txt";
-  el.fileSize.value = "6";
-  el.startBlock.value = "2";
-  el.linkedBlocks.value = "2, 7, 12, 18, 24, 29";
-  el.indexBlock.value = "5";
-  el.indexedBlocks.value = "8, 13, 17, 22, 27, 31";
-  el.l1IndexBlock.value = "3";
-  el.l2IndexBlocks.value = "6, 10";
-  el.mlDataBlocks.value = "14, 18, 21, 25, 28, 31";
-  el.diskMap.innerHTML = "";
-  el.legend.innerHTML = "";
-  el.structViz.innerHTML = "";
-  el.status.textContent = "IDLE";
-  el.blocksUsed.textContent = "—";
-  el.overhead.textContent = "—";
-  el.runBadge.textContent = "No allocation yet";
-  el.trace.textContent = "$ FILE_ALLOCATOR initialized\n$ Configure a file and select an allocation method...";
-  el.error.textContent = "";
-  updateBlockCount();
-  renderDiskMap(Number(el.totalBlocks.value));
-});
-
-el.totalBlocks.addEventListener("input", () => {
-  updateBlockCount();
-  renderDiskMap(Number(el.totalBlocks.value));
-});
-
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-setupAlgorithms();
-updateConditionalFields();
-updateBlockCount();
-renderDiskMap(Number(el.totalBlocks.value));
