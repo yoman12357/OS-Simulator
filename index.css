@@ -445,6 +445,496 @@ footer a:hover {
     transform: translateX(4px);
 }
 
+.hero-panel-shell {
+    position: relative;
+}
+
+.hero-core-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.82fr);
+    gap: 1.4rem;
+    padding: 1.6rem;
+    border-radius: 2rem;
+    border: 1px solid rgba(103, 168, 255, 0.08);
+    background:
+        radial-gradient(circle at top right, rgba(77, 163, 255, 0.15), transparent 24%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%),
+        linear-gradient(155deg, var(--root-surface) 0%, var(--root-surface-alt) 100%);
+    box-shadow: var(--root-shadow);
+    overflow: hidden;
+}
+
+.hero-core-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, transparent 0%, rgba(139, 197, 255, 0.05) 50%, transparent 100%);
+    opacity: 0.8;
+}
+
+.hero-primary,
+.hero-terminal-stack {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-primary {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.4rem;
+}
+
+.hero-copy-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hero-kicker-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.hero-kicker,
+.hero-command-kicker {
+    color: var(--root-accent-warm);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.hero-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(103, 168, 255, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--root-text-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.hero-live-pill::before {
+    content: "";
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 50%;
+    background: var(--root-accent);
+    box-shadow: 0 0 14px rgba(77, 163, 255, 0.65);
+}
+
+.hero-title {
+    max-width: 11ch;
+    color: var(--root-text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.8rem);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+}
+
+.hero-description-copy {
+    max-width: 56ch;
+    color: var(--root-text-soft);
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+}
+
+.hero-action-primary,
+.hero-action-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.2rem;
+    padding: 0.95rem 1.3rem;
+    border-radius: 1rem;
+    text-decoration: none;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+        transform 0.24s ease,
+        box-shadow 0.24s ease,
+        border-color 0.24s ease,
+        background-color 0.24s ease,
+        color 0.24s ease;
+}
+
+.hero-action-primary {
+    color: #03111f;
+    background: linear-gradient(135deg, #4da3ff 0%, #8bc5ff 100%);
+    box-shadow: 0 18px 34px rgba(77, 163, 255, 0.2);
+}
+
+.hero-action-secondary {
+    color: var(--root-text);
+    border: 1px solid rgba(103, 168, 255, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.hero-action-primary:hover,
+.hero-action-secondary:hover {
+    transform: translateY(-2px);
+}
+
+.hero-action-secondary:hover {
+    border-color: rgba(103, 168, 255, 0.32);
+    background: rgba(77, 163, 255, 0.1);
+    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.2);
+}
+
+.hero-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.hero-stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-height: 8.7rem;
+    padding: 1rem 1.05rem;
+    border-radius: 1.35rem;
+    border: 1px solid rgba(103, 168, 255, 0.08);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.015) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-stat-card::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(77, 163, 255, 0.6) 50%, transparent 100%);
+    opacity: 0.85;
+}
+
+.hero-stat-card-primary {
+    background:
+        radial-gradient(circle at top right, rgba(77, 163, 255, 0.16), transparent 48%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.015) 100%);
+}
+
+.hero-stat-label {
+    color: var(--root-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.hero-stat-value {
+    color: var(--root-text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+}
+
+.hero-stat-copy {
+    color: var(--root-text-soft);
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+
+.hero-terminal-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hero-terminal-window,
+.hero-command-panel {
+    border-radius: 1.5rem;
+    border: 1px solid rgba(103, 168, 255, 0.1);
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+        linear-gradient(155deg, rgba(5, 11, 21, 0.94) 0%, rgba(11, 21, 40, 0.98) 100%);
+    box-shadow: var(--root-shadow);
+    overflow: hidden;
+}
+
+.hero-terminal-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid rgba(103, 168, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.hero-terminal-lights {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.hero-terminal-light {
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 50%;
+}
+
+.hero-terminal-title {
+    color: var(--root-text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+}
+
+.hero-terminal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1.2rem 1.1rem 1.3rem;
+    font-size: 0.83rem;
+    line-height: 1.6;
+}
+
+.hero-terminal-line {
+    color: var(--root-text-soft);
+}
+
+.hero-terminal-command,
+.hero-terminal-accent {
+    color: var(--root-accent);
+}
+
+.hero-terminal-help {
+    display: grid;
+    gap: 0.28rem;
+    margin-top: 0.25rem;
+    color: var(--root-text-muted);
+    font-size: 0.74rem;
+}
+
+.hero-brand-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 28rem;
+    padding: 2.3rem 2rem 2.5rem;
+    overflow: hidden;
+}
+
+.hero-brand-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 24% 26%, rgba(77, 163, 255, 0.22), transparent 26%),
+        radial-gradient(circle at 78% 70%, rgba(139, 197, 255, 0.16), transparent 24%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.hero-brand-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0 26px,
+            rgba(77, 163, 255, 0.05) 26px 27px
+        );
+    opacity: 0.45;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.75), transparent 100%);
+    pointer-events: none;
+}
+
+.hero-brand-glow {
+    position: absolute;
+    top: 12%;
+    left: 10%;
+    width: 12rem;
+    height: 12rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(77, 163, 255, 0.32) 0%, rgba(77, 163, 255, 0) 68%);
+    filter: blur(10px);
+    animation: hero-orbit 8.5s ease-in-out infinite;
+}
+
+.hero-brand-label,
+.hero-brand-title,
+.hero-brand-subtitle {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-brand-label {
+    color: var(--root-accent-warm);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    animation: hero-fade-up 0.9s ease both;
+}
+
+.hero-brand-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    color: var(--root-text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(3.9rem, 8vw, 6.6rem);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.07em;
+    text-shadow: 0 0 28px rgba(77, 163, 255, 0.12);
+}
+
+.hero-brand-line {
+    display: block;
+    animation: hero-title-rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-brand-line:last-child {
+    animation-delay: 0.12s;
+}
+
+.hero-brand-subtitle {
+    max-width: 28rem;
+    margin-top: 1.2rem;
+    color: var(--root-text-soft);
+    font-size: 0.98rem;
+    line-height: 1.7;
+    animation: hero-fade-up 1s ease both;
+    animation-delay: 0.2s;
+}
+
+.hero-command-panel {
+    padding: 1.05rem;
+}
+
+.hero-command-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+}
+
+.hero-command-title {
+    color: var(--root-text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.08rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-top: 0.3rem;
+}
+
+.hero-command-hint {
+    color: var(--root-text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hero-command-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(103, 168, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.hero-command-prompt {
+    color: var(--root-accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.hero-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.95rem;
+}
+
+.hero-command-chip {
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(103, 168, 255, 0.1);
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--root-text-soft);
+    font-size: 0.74rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: lowercase;
+}
+
+.hero-command-chip-primary {
+    background: rgba(77, 163, 255, 0.12);
+    border-color: rgba(103, 168, 255, 0.22);
+    color: var(--root-accent-warm);
+}
+
+@keyframes hero-title-rise {
+    from {
+        opacity: 0;
+        transform: translateY(22px);
+        letter-spacing: -0.02em;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        letter-spacing: -0.07em;
+    }
+}
+
+@keyframes hero-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-orbit {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.75;
+    }
+    50% {
+        transform: translate3d(26px, 22px, 0) scale(1.12);
+        opacity: 1;
+    }
+}
+
 .dashboard-shell {
     display: grid;
     grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
@@ -665,6 +1155,49 @@ footer a:hover {
 }
 
 @media (max-width: 768px) {
+    .hero-core-panel {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        border-radius: 1.55rem;
+    }
+
+    .hero-title {
+        max-width: none;
+        font-size: clamp(2.2rem, 9vw, 3.3rem);
+    }
+
+    .hero-actions,
+    .hero-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-stats-grid {
+        display: grid;
+    }
+
+    .hero-action-primary,
+    .hero-action-secondary {
+        width: 100%;
+    }
+
+    .hero-command-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .hero-brand-stage {
+        min-height: 19rem;
+        padding: 1.7rem 1.35rem 1.9rem;
+    }
+
+    .hero-brand-title {
+        font-size: clamp(3rem, 15vw, 4.8rem);
+    }
+
+    .hero-brand-subtitle {
+        max-width: none;
+    }
+
     .dashboard-shell {
         grid-template-columns: 1fr;
     }

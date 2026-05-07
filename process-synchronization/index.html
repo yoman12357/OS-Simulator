@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Process Synchronization Simulator</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css" />
   <script src="script.js"></script>
 </head>
 <body>
@@ -18,25 +18,25 @@
 
   <main class="grid">
     <section class="card">
-      <div class="top"><div><small>01</small><h2>Process Critical Section</h2><p>Only one process can enter the critical section at a time.</p></div><div class="btns"><button onclick="autoCritical[...]
+      <div class="top"><div><small>01</small><h2>Process Critical Section</h2><p>Only one process can enter the critical section at a time.</p></div><div class="btns"><button onclick="autoCritical()">Auto Simulate</button><button onclick="resetCritical()" class="soft">Reset / Manual</button></div></div>
       <div class="arena split">
         <div><h3>Processes</h3><div class="nodes">
-          <button class="node idle" id="p1" onclick="processClick(1)">P1</button><button class="node idle" id="p2" onclick="processClick(2)">P2</button><button class="node idle" id="p3" onclick="p[...]
+          <button class="node idle" id="p1" onclick="processClick(1)">P1</button><button class="node idle" id="p2" onclick="processClick(2)">P2</button><button class="node idle" id="p3" onclick="processClick(3)">P3</button><button class="node idle" id="p4" onclick="processClick(4)">P4</button>
         </div></div>
-        <div class="zone"><h3>Critical Section</h3><div id="lock" class="big">🔓</div><b id="criticalText">Free</b><p id="criticalDesc">Click a process to enter. Click same process again to exit[...]
+        <div class="zone"><h3>Critical Section</h3><div id="lock" class="big">🔓</div><b id="criticalText">Free</b><p id="criticalDesc">Click a process to enter. Click same process again to exit.</p></div>
       </div>
     </section>
 
     <section class="card">
-      <div class="top"><div><small>02</small><h2>Readers-Writers Problem</h2><p>Many readers can read together. Writer needs exclusive access.</p></div><div class="btns"><button onclick="autoRW()"[...]
+      <div class="top"><div><small>02</small><h2>Readers-Writers Problem</h2><p>Many readers can read together. Writer needs exclusive access.</p></div><div class="btns"><button onclick="autoRW()">Auto Simulate</button><button onclick="resetRW()" class="soft">Reset / Manual</button></div></div>
       <div class="arena split">
-        <div><h3>Readers</h3><div class="nodes"><button class="node reader idle" id="r1" onclick="readerClick(1)">Reader 1</button><button class="node reader idle" id="r2" onclick="readerClick(2)"[...]
-        <div class="zone"><h3>Shared Database</h3><div class="db">DATABASE</div><div class="stats"><span><b id="readCount">0</b> readers</span><span><b id="writeCount">0</b> writer</span><span id=[...]
+        <div><h3>Readers</h3><div class="nodes"><button class="node reader idle" id="r1" onclick="readerClick(1)">Reader 1</button><button class="node reader idle" id="r2" onclick="readerClick(2)">Reader 2</button><button class="node reader idle" id="r3" onclick="readerClick(3)">Reader 3</button></div><h3>Writers</h3><div class="nodes"><button class="node writer idle" id="w1" onclick="writerClick(1)">Writer 1</button><button class="node writer idle" id="w2" onclick="writerClick(2)">Writer 2</button></div></div>
+        <div class="zone"><h3>Shared Database</h3><div class="db">DATABASE</div><div class="stats"><span><b id="readCount">0</b> readers</span><span><b id="writeCount">0</b> writer</span><span id="rwStatus">Free</span></div><p>Writer turns red when readers are active. Readers turn red when writer is active.</p></div>
       </div>
     </section>
 
     <section class="card wide">
-      <div class="top"><div><small>03</small><h2>Dining Philosophers Problem</h2><p>Fixed logic: Philosopher Pi picks left chopstick i and right chopstick (i+1)%5.</p></div><div class="btns"><butt[...]
+      <div class="top"><div><small>03</small><h2>Dining Philosophers Problem</h2><p>Fixed logic: Philosopher Pi picks left chopstick i and right chopstick (i+1)%5.</p></div><div class="btns"><button onclick="autoDining()">Auto Simulate</button><button onclick="deadlockDining()" class="warn">Show Deadlock</button><button onclick="resetDining()" class="soft">Reset / Manual</button></div></div>
       <div class="arena split">
         <div class="tableWrap">
           <div class="table">
@@ -46,18 +46,18 @@
             <button class="phil idle" id="ph2" onclick="philClick(2)">P2<br><small>L:C2 R:C3</small></button>
             <button class="phil idle" id="ph3" onclick="philClick(3)">P3<br><small>L:C3 R:C4</small></button>
             <button class="phil idle" id="ph4" onclick="philClick(4)">P4<br><small>L:C4 R:C0</small></button>
-            <div class="stick idle" id="c0">C0</div><div class="stick idle" id="c1">C1</div><div class="stick idle" id="c2">C2</div><div class="stick idle" id="c3">C3</div><div class="stick idle" [...]
+            <div class="stick idle" id="c0">C0</div><div class="stick idle" id="c1">C1</div><div class="stick idle" id="c2">C2</div><div class="stick idle" id="c3">C3</div><div class="stick idle" id="c4">C4</div>
           </div>
         </div>
-        <div class="zone"><h3>Rule Checker</h3><div class="stats"><span><b id="eatCount">0</b> eating</span><span><b id="stickCount">0</b> sticks used</span><span id="deadStatus">No deadlock</span[...]
+        <div class="zone"><h3>Rule Checker</h3><div class="stats"><span><b id="eatCount">0</b> eating</span><span><b id="stickCount">0</b> sticks used</span><span id="deadStatus">No deadlock</span></div><p id="diningInfo">Click a philosopher to eat. Click again to put down both chopsticks.</p><p class="tip">Two non-neighbour philosophers can eat together. Neighbours conflict because they share one chopstick.</p></div>
       </div>
     </section>
 
     <section class="card">
-      <div class="top"><div><small>04</small><h2>Producer-Consumer Problem</h2><p>Producer adds to bounded buffer. Consumer removes from it.</p></div><div class="btns"><button onclick="autoPC()">A[...]
+      <div class="top"><div><small>04</small><h2>Producer-Consumer Problem</h2><p>Producer adds to bounded buffer. Consumer removes from it.</p></div><div class="btns"><button onclick="autoPC()">Auto Simulate</button><button onclick="resetPC()" class="soft">Reset / Manual</button></div></div>
       <div class="arena split">
-        <div><h3>Actions</h3><div class="nodes"><button class="node producer idle" id="producer" onclick="produce()">Producer</button><button class="node consumer idle" id="consumer" onclick="cons[...]
-        <div class="zone"><h3>Bounded Buffer</h3><div class="meter"><i id="fill"></i></div><div class="stats"><span><b id="bufCount">0</b>/5 items</span><span id="bufStatus">Empty</span></div><p>P[...]
+        <div><h3>Actions</h3><div class="nodes"><button class="node producer idle" id="producer" onclick="produce()">Producer</button><button class="node consumer idle" id="consumer" onclick="consume()">Consumer</button></div><h3>Buffer</h3><div class="buffer" id="buffer"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="zone"><h3>Bounded Buffer</h3><div class="meter"><i id="fill"></i></div><div class="stats"><span><b id="bufCount">0</b>/5 items</span><span id="bufStatus">Empty</span></div><p>Producer becomes red when buffer is full. Consumer becomes red when buffer is empty.</p></div>
       </div>
     </section>
   </main>
@@ -66,3 +66,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
