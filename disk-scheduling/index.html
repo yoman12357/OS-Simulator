@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disk Scheduler Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="strip" aria-label="Project summary">
+      <div class="bar">
+        <p class="eyebrow">Lab Mode</p>
+        <h2>Interactive Disk Scheduler Studio</h2>
+      </div>
+     
+      
+    </section>
+
+    <section class="studio">
+      <header class="hero">
+        <a class="back" href="../index.html" aria-label="Back to OS simulator">← Back to OS Simulator</a>
+        <p class="eyebrow">Teacher Demo Build</p>
+        <h1>Disk Scheduler Studio</h1>
+        <p class="lede">
+          Simulate FCFS, SSTF, SCAN, C-SCAN, LOOK, C-LOOK, RSS, LIFO, Priority, and Deadline disk scheduling.
+          Add request cylinders, choose a head position and direction, then watch the seek path update step by step.
+        </p>
+        <div class="chips" id="chipList"></div>
+      </header>
+
+      <section class="dashboard">
+        <aside class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Control Deck</p>
+              <h3>Request Queue</h3>
+            </div>
+            <span class="pill" id="queueCount">0 requests</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <label>
+                Request cylinders
+                <input id="requests" value="98, 183, 37, 122, 14, 124, 65, 67" inputmode="numeric">
+              </label>
+
+              <div class="two">
+                <label>
+                  Head start
+                  <input id="head" type="number" min="0" value="53">
+                </label>
+                <label>
+                  Disk size
+                  <input id="diskSize" type="number" min="2" value="200">
+                </label>
+              </div>
+
+              <div class="two">
+                <label>
+                  Direction
+                  <select id="direction">
+                    <option value="right">Right / Up</option>
+                    <option value="left">Left / Down</option>
+                  </select>
+                </label>
+                <label>
+                  Add request
+                  <input id="newRequest" type="number" min="0" placeholder="Cylinder no.">
+                </label>
+              </div>
+
+              <label class="conditional" id="priorityField">
+                Priority values
+                <input id="priorities" value="2, 5, 1, 4, 3, 2, 5, 1" inputmode="numeric">
+              </label>
+
+              <label class="conditional" id="deadlineField">
+                Deadline values
+                <input id="deadlines" value="90, 20, 75, 45, 110, 60, 30, 100" inputmode="numeric">
+              </label>
+
+              <div class="actions">
+                <button class="btn" id="addRequest">Add Request</button>
+                <button class="btn ghost" id="sample">Load Sample</button>
+              </div>
+
+              <div>
+                <p class="eyebrow">Algorithm</p>
+                <div class="algorithms" id="algoButtons"></div>
+              </div>
+
+              <div class="actions">
+                <button class="btn primary" id="run">Run Scheduler</button>
+                <button class="btn ghost" id="reset">Reset</button>
+              </div>
+              <div class="error" id="error"></div>
+              <p class="note">
+                Priority serves the highest number first. Deadline uses EDF order, so the smallest deadline is served first.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        <section>
+          <div class="stats">
+            <article class="stat">
+              <p class="eyebrow">Status</p>
+              <strong id="status">IDLE</strong>
+              <span>Scheduler ready</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Algorithm</p>
+              <strong id="activeAlgo">FCFS</strong>
+              <span>Active mode</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Total Seek</p>
+              <strong id="totalSeek">—</strong>
+              <span>Cylinder movement</span>
+            </article>
+            <article class="stat">
+              <p class="eyebrow">Avg Seek</p>
+              <strong id="avgSeek">—</strong>
+              <span>Per request</span>
+            </article>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Visualization</p>
+                <h3>Seek Path</h3>
+              </div>
+              <span class="pill" id="runBadge">No algorithm run yet</span>
+            </div>
+            <div class="panel-body">
+              <div class="track-wrap">
+                <svg id="chart" viewBox="0 0 1000 260" role="img" aria-label="Disk seek path chart"></svg>
+                <div class="axis">
+                  <span>0</span>
+                  <span id="axisMid">100</span>
+                  <span id="axisMax">199</span>
+                </div>
+              </div>
+              <div class="queue" id="sequence"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel console-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Execution Console</p>
+            <h3>Scheduler Trace</h3>
+          </div>
+          <span class="pill">Live log</span>
+        </div>
+        <div class="trace" id="trace">$ DISK_SCHEDULER initialized
+$ Add requests and select an algorithm...</div>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
