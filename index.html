@@ -72,82 +72,97 @@
 <main class="pt-32 pb-24 px-6 md:px-12 max-w-7xl mx-auto space-y-16">
 
     
-    <section id="hero" class="space-y-8">
-        
-        <div class="bg-surface-container rounded-t-lg border border-white/10 border-b-0">
-            <div class="flex items-center gap-2 px-4 py-3">
-                <div class="flex gap-2">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+    <section id="hero" class="hero-panel-shell space-y-8">
+        <div class="hero-core-panel">
+            <div class="hero-primary">
+                <div class="hero-copy-block">
+                    <div class="hero-kicker-wrap">
+                        <span class="hero-kicker">Interactive OS Laboratory</span>
+                        <span class="hero-live-pill">Kernel Status: Active</span>
+                    </div>
+                    <h1 class="hero-title">Explore operating system concepts through live simulation, not static notes.</h1>
+                    <p class="hero-description-copy">
+                        Launch hands-on visual modules for system calls, scheduling, memory, storage, synchronization, and real-time execution from one unified dashboard.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#modules" class="hero-action-primary">Browse Modules</a>
+                        <a href="system-calls/index.html" class="hero-action-secondary">Open System Calls</a>
+                    </div>
                 </div>
-                <div class="flex-1 text-center">
-                    <span class="font-mono text-xs text-on-surface-variant">os-simulator@main:~$</span>
+
+                <div class="hero-stats-grid">
+                    <div class="hero-stat-card hero-stat-card-primary">
+                        <span class="hero-stat-label">Modules</span>
+                        <strong class="hero-stat-value" id="stat-modules">10</strong>
+                        <span class="hero-stat-copy">Interactive labs ready to launch</span>
+                    </div>
+                    <div class="hero-stat-card">
+                        <span class="hero-stat-label">Processes</span>
+                        <strong class="hero-stat-value" id="stat-processes">0</strong>
+                        <span class="hero-stat-copy">Live runtime monitor</span>
+                    </div>
+                    <div class="hero-stat-card">
+                        <span class="hero-stat-label">Memory</span>
+                        <strong class="hero-stat-value"><span id="stat-memory">128</span> MB</strong>
+                        <span class="hero-stat-copy">Baseline teaching environment</span>
+                    </div>
+                    <div class="hero-stat-card">
+                        <span class="hero-stat-label">Uptime</span>
+                        <strong class="hero-stat-value" id="stat-uptime">00:00</strong>
+                        <span class="hero-stat-copy">Dashboard session timer</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        
-        <div class="bg-surface-container rounded-b-lg border border-white/10 p-6 md:p-8">
-            <div class="font-mono text-sm space-y-2">
-                <div class="text-tertiary-fixed">$ ./kernel-lab --info</div>
-                <div class="text-on-surface">Kernel Laboratory v1.0.4 - Interactive Computing Environment</div>
-                <div class="text-tertiary-fixed">$ ./kernel-lab --check</div>
-                <div class="text-on-surface">Environment State: <span class="text-blue-300">ACTIVE</span></div>
-                <div class="text-on-surface">Running Components: <span class="text-tertiary-fixed" id="module-count">10</span></div>
-                <div class="text-on-surface">Completed Operations: <span class="text-tertiary-fixed" id="sim-count">0</span></div>
-                <div class="text-tertiary-fixed">$ ./kernel-lab --assist</div>
-                <div class="text-on-surface-variant text-xs">
-                    Supported Operations:<br/>
-                    &nbsp;&nbsp;explore&nbsp;&nbsp;&nbsp;&nbsp;Navigate component library<br/>
-                    &nbsp;&nbsp;simulate&nbsp;&nbsp;&nbsp;Execute live demonstrations<br/>
-                    &nbsp;&nbsp;learn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Access training materials<br/>
-                    &nbsp;&nbsp;team&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Display development staff
+            <div class="hero-terminal-stack">
+                <div class="hero-terminal-window">
+                    <div class="hero-terminal-topbar">
+                        <div class="hero-terminal-lights">
+                            <span class="hero-terminal-light bg-red-500"></span>
+                            <span class="hero-terminal-light bg-yellow-500"></span>
+                            <span class="hero-terminal-light bg-green-500"></span>
+                        </div>
+                        <span class="hero-terminal-title">os-simulator@main:~$</span>
+                    </div>
+                    <div class="hero-brand-stage">
+                        <div class="hero-brand-glow"></div>
+                        <span class="hero-brand-label">Interactive Learning Platform</span>
+                        <h2 class="hero-brand-title">
+                            <span class="hero-brand-line">OS</span>
+                            <span class="hero-brand-line">Simulator</span>
+                        </h2>
+                        <p class="hero-brand-subtitle">Animated operating systems dashboard for visual labs and live concept demos.</p>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-gradient-to-br from-tertiary-fixed/20 to-tertiary-fixed/5 rounded-lg p-4 border border-tertiary-fixed/30 text-center">
-                <div class="text-2xl font-bold text-tertiary-fixed mb-1" id="stat-modules">10</div>
-                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Modules</div>
-            </div>
-            <div class="bg-gradient-to-br from-sky-500/20 to-sky-500/5 rounded-lg p-4 border border-sky-500/30 text-center">
-                <div class="text-2xl font-bold text-sky-300 mb-1" id="stat-processes">0</div>
-                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Processes</div>
-            </div>
-            <div class="bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-lg p-4 border border-blue-500/30 text-center">
-                <div class="text-2xl font-bold text-blue-300 mb-1" id="stat-memory">128</div>
-                <div class="text-xs text-on-surface-variant uppercase tracking-widest">MB RAM</div>
-            </div>
-            <div class="bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 rounded-lg p-4 border border-indigo-500/30 text-center">
-                <div class="text-2xl font-bold text-indigo-300 mb-1" id="stat-uptime">00:00</div>
-                <div class="text-xs text-on-surface-variant uppercase tracking-widest">Uptime</div>
-            </div>
-        </div>
-
-        
-        <div class="bg-surface-container-low rounded-lg border border-white/5 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <span class="text-tertiary-fixed font-mono text-sm">$</span>
-                <input type="text" id="command-input" placeholder="Enter: explore, simulate, learn, team..." 
-                       class="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant/50 font-mono text-sm">
-                <span class="text-xs text-on-surface-variant">Press Tab for suggestions</span>
-            </div>
-            <div class="flex gap-2 flex-wrap">
-                <button class="command-chip px-3 py-1 bg-tertiary-fixed/10 border border-tertiary-fixed/30 rounded-full text-xs text-tertiary-fixed hover:bg-tertiary-fixed/20 transition-colors" data-command="explore">
-                    explore
-                </button>
-                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="simulate">
-                    simulate
-                </button>
-                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="learn">
-                    learn
-                </button>
-                <button class="command-chip px-3 py-1 bg-surface-container-highest border border-white/10 rounded-full text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors" data-command="team">
-                    team
-                </button>
+                <div class="hero-command-panel">
+                    <div class="hero-command-head">
+                        <div>
+                            <span class="hero-command-kicker">Quick Console</span>
+                            <h3 class="hero-command-title">Issue a dashboard command</h3>
+                        </div>
+                        <span class="hero-command-hint">Press Enter to run</span>
+                    </div>
+                    <div class="hero-command-input-wrap">
+                        <span class="hero-command-prompt">$</span>
+                        <input type="text" id="command-input" placeholder="Enter: explore, simulate, learn, team..."
+                            class="flex-1 bg-transparent border-none outline-none text-on-surface placeholder:text-on-surface-variant/50 font-mono text-sm">
+                    </div>
+                    <div class="hero-chip-row">
+                        <button class="command-chip hero-command-chip hero-command-chip-primary" data-command="explore">
+                            explore
+                        </button>
+                        <button class="command-chip hero-command-chip" data-command="simulate">
+                            simulate
+                        </button>
+                        <button class="command-chip hero-command-chip" data-command="learn">
+                            learn
+                        </button>
+                        <button class="command-chip hero-command-chip" data-command="team">
+                            team
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -174,9 +189,9 @@
                             <span class="material-symbols-outlined">terminal</span>
                             <span>System Calls</span>
                         </a>
-                        <a class="quick-link" href="page-replacement/index.html">
-                            <span class="material-symbols-outlined">swap_horiz</span>
-                            <span>Page Repl.</span>
+                        <a class="quick-link" href="memory-management/index.html">
+                            <span class="material-symbols-outlined">database</span>
+                            <span>Memory</span>
                         </a>
                         <a class="quick-link" href="process-synchronization/index.html">
                             <span class="material-symbols-outlined">sync</span>
@@ -240,7 +255,7 @@
                             <span class="module-link-label">Open simulation</span>
                         </div>
                     </a>
-                     <a href="rtos/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                    <a href="rtos/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
                         <div class="module-card-top">
                             <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
                                 <span class="material-symbols-outlined text-tertiary-fixed text-2xl">timer</span>
@@ -372,7 +387,7 @@
                     </a>
 
                     
-                    <a href="file-allocation/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
+                    <a href="directory-structures/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
                         <div class="module-card-top">
                             <div class="p-3 bg-tertiary-fixed/10 rounded-lg border border-tertiary-fixed/20">
                                 <span class="material-symbols-outlined text-tertiary-fixed text-2xl">folder_open</span>
@@ -417,12 +432,6 @@
 
                     
                    
-
-                    
-                   
-
-                    
-                    
 
                     
                     <a href="page-replacement/index.html" class="module-card module-card-link bg-surface-container-low rounded-lg p-8 border border-white/5 flex flex-col justify-between h-64 cursor-pointer group block">
